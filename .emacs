@@ -60,7 +60,7 @@
  ;; If there is more than one, they won't work right.
  '(column-number-mode t)
  '(conda-anaconda-home "/Users/zach/Projects/Programming/Python/miniconda3")
- '(package-selected-packages (quote (magit conda docker docker-tramp iedit))))
+ '(package-selected-packages (quote (conda iedit))))
 
 ;;  _____ __  __    _    ____ ____  
 ;; | ____|  \/  |  / \  / ___/ ___| 
