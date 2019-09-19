@@ -36,8 +36,19 @@
  ;; | |_) / _` |/ __| |/ / _` |/ _` |/ _ \
  ;; |  __/ (_| | (__|   < (_| | (_| |  __/
  ;; |_|   \__,_|\___|_|\_\__,_|\__, |\___|
- ;;                            |___/      
+ ;;                            |___/      w
 (print "Setting up packages...")
+
+;; Org Mode - Log time a task is completed
+(setq org-log-done 'time)
+
+;; Jedi - Autocomplete
+(add-hook 'python-mode-hook 'jedi:setup)
+(setq jedi:complete-on-dot t)                 ; optional
+
+;;(when (memq window-system '(mac ns))
+;;  (exec-path-from-shell-initialize))
+
 
 (require 'package)
 (setq package-user-dir "~/.emacs.d/packages")
@@ -51,6 +62,8 @@
 
 (require 'iedit)
 
+;; Python
+
 (require 'conda)
 (require 's) ;; String package needed by conda
 (custom-set-variables
@@ -59,8 +72,25 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(column-number-mode t)
- '(conda-anaconda-home "/Users/zach/Projects/Programming/Python/miniconda3")
- '(package-selected-packages (quote (conda iedit))))
+ '(conda-anaconda-home "/Users/dingelsz/miniconda3")
+ '(custom-safe-themes
+   (quote
+    ("84890723510d225c45aaff941a7e201606a48b973f0121cb9bcb0b9399be8cba" "b46ee2c193e350d07529fcd50948ca54ad3b38446dcbd9b28d0378792db5c088" default)))
+ '(org-agenda-files
+   (quote
+    (#("/ssh:ihme:/homes/dingelsz/documents/todo.org" 1 4
+       (tramp-default t)))))
+ '(package-selected-packages
+   (quote
+    (writeroom-mode exec-path-from-shell jedi zenburn-theme dracula-theme csv-mode ess sphinx-doc conda iedit)))
+ '(tramp-default-method "ssh"))
+;; Doc Strings
+(add-hook 'python-mode-hook (lambda ()
+			      (require 'sphinx-doc)
+			      (sphinx-doc-mode t)))
+
+(require 'tramp)
+(customize-set-variable 'tramp-default-method "ssh")
 
 ;;  _____ __  __    _    ____ ____  
 ;; | ____|  \/  |  / \  / ___/ ___| 
@@ -72,15 +102,25 @@
 (print "Configuring emacs")
 
 ;; Look & Feel
-(load-theme 'tsdh-light)
-(set-default-font "monospace 14")
+(load-theme 'wombat)
+(set-default-font "Monaco 13")
 (scroll-bar-mode 0)
 (column-number-mode 1)
 (setq ring-bell-function 'ignore)
 
+;; Hide the bottom mode bar & the top toolbar
+(setq-default mode-line-format nil)
+(tool-bar-mode -1) 
+
+
 ;; Functionality
+(setq auto-save-default nil)
+
 (ido-mode 1)
 (setq ido-separator "\n")
+
+(set-variable (quote scheme-program-name) "/usr/local/bin/mit-scheme")
+(setq python-python-command "/Users/dingelsz/miniconda3/bin/python")
 
 ;;  _____ _       _     _     
 ;; |  ___(_)_ __ (_)___| |__  
