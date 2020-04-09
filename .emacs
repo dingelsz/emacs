@@ -47,6 +47,9 @@
 ;; |_____|_|  |_/_/   \_\____|____/ 
 (print "Configuring emacs")
 
+;; add the path
+(add-to-list 'exec-path "/usr/local/bin/")
+
 ;; Set the window dimensions
 (add-to-list 'default-frame-alist '(height . 24))
 (add-to-list 'default-frame-alist '(width . 80))
@@ -129,12 +132,12 @@
 ;; python interpreter
 (require 'virtualenvwrapper)
 (venv-initialize-interactive-shells) 
-(setq venv-location "~/projects/venv/")
+(setq venv-location "~/.venv/")
 (venv-workon "emacs")
 
 ;; Python - documentation, turn off autocomplete
 (add-hook 'python-mode-hook 'jedi:ac-setup)
-(auto-complete-mode 0)
+(auto-complete-mode -1)
 
 ;; Weird annoying yet harmless bug with python mode
 (setq python-indent-guess-indent-offset t)  
