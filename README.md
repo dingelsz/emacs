@@ -1,1 +1,1 @@
-# pydocs
+Emacs setup
