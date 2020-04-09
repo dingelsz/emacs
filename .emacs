@@ -31,7 +31,13 @@
 (global-set-key (kbd "C-x C-x") 'execute-extended-command)
 (global-set-key (kbd "C-x C-b") 'switch-to-previous-buffer)
 (global-set-key (kbd "C-x g") 'magit-status)
-(global-set-key (kbd "C-c d") 'sphinx-doc)
+(global-set-key (kbd "C-c C-d") 'sphinx-doc)
+(global-set-key (kbd "C-c [") 'python-indent-shift-left)
+(global-set-key (kbd "C-c ]") 'python-indent-shift-right)
+(global-set-key (kbd "C-x /") 'comment-line)
+
+(add-hook 'python-mode-hook
+          (lambda () (local-set-key (kbd "C-c d") 'jedi:show-doc)))
 
 
 ;;  _____ __  __    _    ____ ____  
@@ -73,7 +79,11 @@
       kept-new-versions      20 ; how many of the newest versions to keep
       kept-old-versions      5) ; and how many of the old
 
-
+;; Whenever a buffer named py is opened set it to python mode
+(setq-default major-mode
+  (lambda ()
+  (if (string= "py" (buffer-name))
+      (python-mode)(emacs-lisp-mode))))
  ;;  ____            _                    
  ;; |  _ \ __ _  ___| | ____ _  __ _  ___ 
  ;; | |_) / _` |/ __| |/ / _` |/ _` |/ _ \
@@ -116,21 +126,22 @@
 (require 'yasnippet)
 (yas-global-mode 1)
 
-;; Python
-(add-hook 'python-mode-hook 'jedi:setup)
-(setq jedi:complete-on-dot t)
+;; python interpreter
+(require 'virtualenvwrapper)
+(venv-initialize-interactive-shells) 
+(setq venv-location "~/projects/venv/")
+(venv-workon "emacs")
 
-;;(elpy-enable)
-(pyvenv-workon 'elpy)
-;;(setq elpy-rpc-virtualenv-path 'current)
+;; Python - documentation, turn off autocomplete
+(add-hook 'python-mode-hook 'jedi:ac-setup)
+(auto-complete-mode 0)
 
-(add-hook 'python-mode-hook (lambda ()
-			      (require 'sphinx-doc)
-			      (sphinx-doc-mode t)))
-
+;; Weird annoying yet harmless bug with python mode
 (setq python-indent-guess-indent-offset t)  
 (setq python-indent-guess-indent-offset-verbose nil)
 
+
+;; Custom code for making docstrings w\ yasnippet
 (load "~/.emacs.d/packages/pydocs.el")
 ;;  _____ _       _     _     
 ;; |  ___(_)_ __ (_)___| |__  
@@ -145,4 +156,5 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (yasnippet-snippets pyenv-mode virtualenv elpy zenburn-theme yaml-mode writeroom-mode sphinx-doc magit-popup magit jedi iedit haskell-mode ghub exec-path-from-shell ess ein dracula-theme docker csv-mode conda atom-one-dark-theme))))
+    (virtualenvwrapper flycheck-pycheckers flycheck-mypy flycheck jedi-core company-jedi jedi-direx yasnippet-snippets pyenv-mode virtualenv elpy zenburn-theme yaml-mode writeroom-mode sphinx-doc magit-popup magit jedi iedit haskell-mode ghub exec-path-from-shell ess dracula-theme docker csv-mode conda atom-one-dark-theme)))
+ '(tramp-default-method "ssh"))

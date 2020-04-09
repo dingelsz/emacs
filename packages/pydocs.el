@@ -30,7 +30,7 @@
 (defun make-docstring (input)
   "makes a docstring form a list of agurmnets"
   (let ((result nil)
-	(args (mapcar 'parse-argument (remove-all-str (split-string input ",") "self"))))
+	(args (mapcar 'parse-argument (remove "self" (split-string input ",")))))
     (if (string= input "") ""
       (while args
 	(setq result (push (argument-docstring (car args)) result))
@@ -40,15 +40,3 @@
 	;; If theres more than 1 argument there will be a trailing \n
 	(if (< (length result) 2) docstring
 	  (substring docstring 0 -1))))))
-
-
-(defun remove-all-str (list target)
-  "removes all occurances of a word from a list"
-  (cond
-   ((null list) ())
-   ((not (stringp (car list))) (cons (car list) (remove-all (cdr list) target)))
-   ((string= (car list) target) (remove-all (cdr list) target))
-   (t (cons (car list) (remove-all (cdr list) target)))))
-
-
-
