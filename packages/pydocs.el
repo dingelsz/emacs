@@ -12,7 +12,7 @@
 
 (defun parse-argument (input)
   "creates an argument from a string"
-  (when (string-match "\s*\\([^:[:blank:]=]*\\)\s*:?\s*\\([^=[:blank:]]*\\)\s*=?\s*['\"]?\\([^'\"]*\\)\s*" input)
+  (when (string-match "\s*\\([^:\s=]*\\)\s*:?\s*\\([^=\s]*\\)\s*=?\s*['\"]?\\([^'\"]*\\)\s*" input)
     (make-argument :name (match-string 1 input)
 		   :type (match-string 2 input)
 		   :default (match-string 3 input))))
@@ -26,10 +26,11 @@
    (if (string= (argument-type arg) "") "" "\n")
    (if (string= (argument-type arg) "") "" (concat ":type " (argument-name arg) ": " (argument-type arg)))))
 
+
 (defun make-docstring (input)
   "makes a docstring form a list of agurmnets"
   (let ((result nil)
-	(args (mapcar 'parse-argument (tokenize input))))
+	(args (mapcar 'parse-argument (remove-all-str (split-string input ",") "self"))))
     (if (string= input "") ""
       (while args
 	(setq result (push (argument-docstring (car args)) result))
@@ -37,9 +38,17 @@
       ;; Concat all of the doc strings together (flip them because of the stack)
       (let ((docstring (mapconcat 'identity (reverse result) "\n")))
 	;; If theres more than 1 argument there will be a trailing \n
-	(if (eq (length result) 1) docstring
+	(if (< (length result) 2) docstring
 	  (substring docstring 0 -1))))))
 
 
-(substring "hello" 0 -1)
+(defun remove-all-str (list target)
+  "removes all occurances of a word from a list"
+  (cond
+   ((null list) ())
+   ((not (stringp (car list))) (cons (car list) (remove-all (cdr list) target)))
+   ((string= (car list) target) (remove-all (cdr list) target))
+   (t (cons (car list) (remove-all (cdr list) target)))))
+
+
 
