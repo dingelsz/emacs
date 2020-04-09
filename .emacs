@@ -156,5 +156,5 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (virtualenvwrapper flycheck-pycheckers flycheck-mypy flycheck jedi-core company-jedi jedi-direx yasnippet-snippets pyenv-mode virtualenv elpy zenburn-theme yaml-mode writeroom-mode sphinx-doc magit-popup magit jedi iedit haskell-mode ghub exec-path-from-shell ess dracula-theme docker csv-mode conda atom-one-dark-theme)))
+    (virtualenvwrapper jedi-core company-jedi jedi-direx yasnippet-snippets pyenv-mode virtualenv elpy zenburn-theme yaml-mode writeroom-mode sphinx-doc magit-popup magit jedi iedit haskell-mode ghub exec-path-from-shell ess dracula-theme docker csv-mode conda atom-one-dark-theme)))
  '(tramp-default-method "ssh"))
