@@ -21,16 +21,25 @@
 (defun argument-docstring (arg)
   "returns a string representation of the argument"
   (concat
-   (if (eq (argument-name arg) "") "" (concat ":param " (argument-name arg) ":"))
-   (if (eq (argument-default arg) "") "" (concat " , defaults to " (argument-default arg)))
-   (if (eq (argument-name arg) "") "" "\n")
-   (if (eq (argument-type arg) "") "" (concat ":type " (argument-name arg) ": " (argument-type arg)))))
+   (if (string= (argument-name arg) "") "" (concat ":param " (argument-name arg) ":"))
+   (if (string= (argument-default arg) "") "" (concat " , defaults to `" (argument-default arg) "`"))
+   (if (string= (argument-type arg) "") "" "\n")
+   (if (string= (argument-type arg) "") "" (concat ":type " (argument-name arg) ": " (argument-type arg)))))
 
 (defun make-docstring (input)
   "makes a docstring form a list of agurmnets"
   (let ((result nil)
 	(args (mapcar 'parse-argument (tokenize input))))
-    (while args
-      (setq result (push (argument-docstring (car args)) result))
-      (setq args (cdr args)))
-    (mapconcat 'identity (reverse result) "\n")))
+    (if (string= input "") ""
+      (while args
+	(setq result (push (argument-docstring (car args)) result))
+	(setq args (cdr args)))
+      ;; Concat all of the doc strings together (flip them because of the stack)
+      (let ((docstring (mapconcat 'identity (reverse result) "\n")))
+	;; If theres more than 1 argument there will be a trailing \n
+	(if (eq (length result) 1) docstring
+	  (substring docstring 0 -1))))))
+
+
+(substring "hello" 0 -1)
+
