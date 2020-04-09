@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: deff
+# key: deff
+# --
+def $1($2):
+"""$1
+    
+${2:$(make-docstring yas-text)}
+"""
+    $0
