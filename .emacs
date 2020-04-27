@@ -31,8 +31,7 @@
       (add-to-list 'default-frame-alist '(height . 24))
       (add-to-list 'default-frame-alist '(width . 80))
       
-;;      (set-default-font "Fira Code Light 18")
-      (set-default-font "Major Mono Display 18")
+      (set-default-font "Source Code Pro Light 18")
       ;; Disable noisey UI features
       (scroll-bar-mode 0)
       (tool-bar-mode 0)
@@ -115,11 +114,6 @@
   (setq ac-auto-show-menu nil)
   (add-hook 'python-mode-hook
           (lambda () (local-set-key (kbd "C-c d") 'jedi:show-doc)))
-  )
-
-(use-package latex-preview-pane
-  :config
-  (latex-preview-pane-enable)
   )
 
 (use-package magit
