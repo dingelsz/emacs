@@ -48,7 +48,7 @@
       (add-to-list 'default-frame-alist '(height . 24))
       (add-to-list 'default-frame-alist '(width . 80))
       
-      (set-default-font "Source Code Pro Light 20")
+      (set-frame-font "Source Code Pro Light 20")
       ;; Disable noisey UI features
       (scroll-bar-mode 0)
       (tool-bar-mode 0)
