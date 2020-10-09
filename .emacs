@@ -1,49 +1,22 @@
 ;; -----------------------.emacs --- Emacs init file----------------------------
 ;; Author: Zach Dingels
-;; About: 
-;; Code to get a solid emacs running
-;; -----------------------------------------------------------------------------
+;; A solid emacs config. This config aims to have as little dependencies as
+;; possible in order to make it more portable. The config file should be easy
+;; read and navigate.
+
+;; --------------------------------- General -----------------------------------
+(setq ring-bell-function 'ignore)
+
 (add-to-list 'exec-path "/usr/local/bin/")
-;;(add-to-list 'exec-path "/Library/TeX/texbin/")
-(setq-default TeX-PDF-mode t)
-(setq-default TeX-engine 'xetex)
-
 (global-set-key (kbd "C-x C-x") 'execute-extended-command)
-
-;; ---------------------------------- GUI --------------------------------------
-
-(defun simple-mode-line-render (left right)
-  "Return a string of `window-width' length containing LEFT, and RIGHT
- aligned respectively."
-  (let* ((available-width (- (window-width) (length left) 2)))
-    (format (format " %%s %%%ds " available-width) left right)))
-
-(setq-default mode-line-format
-      '((:eval (simple-mode-line-render
-                ;; left
-                (format-mode-line "%+%b [%m]")
-                ;; right
-                (format-mode-line "Line: %l | Column: %c")))))
-
-(menu-bar-mode -1)
-(if (window-system)
-    (progn
-      (add-to-list 'default-frame-alist '(height . 24))
-      (add-to-list 'default-frame-alist '(width . 80))
-      
-;;      (set-default-font "Fira Code Light 18")
-      (set-default-font "Major Mono Display 18")
-      ;; Disable noisey UI features
-      (scroll-bar-mode 0)
-      (tool-bar-mode 0)
-      (column-number-mode 1)
-      ))
+(global-set-key (kbd "C-x m") 'man)
 
 (show-paren-mode 1)
 
-;; --------------------------------- Others ------------------------------------
-
-(setq ring-bell-function 'ignore)
+;; A menu to view everything in the kill ring
+(global-set-key "\M-y" '(lambda ()
+			  (interactive)
+			  (popup-menu 'yank-menu)))
 
 ;; Backup files to the path below. Version controll them as well!
 (setq backup-directory-alist '(("." . "~/.emacs.d/backup"))
@@ -53,11 +26,42 @@
       kept-new-versions      20 ; how many of the newest versions to keep
       kept-old-versions      5) ; and how many of the old
 
+;; -------------------------------- Visuals ------------------------------------
+;; Configure the line mode bar at the bottom of emacs
+(defun simple-mode-line-render (left right)
+  "Return a string of `window-width' length containing LEFT, and RIGHT
+ aligned respectively."
+  (let* ((available-width (- (window-width) (length left) 2)))
+    (format (format " %%s %%%ds " available-width) left right)))
+
+(setq-default mode-line-format
+      '((:eval (simple-mode-line-render
+                ;; left side
+                (format-mode-line "%+%b [%m]")
+                ;; right side
+                (format-mode-line "Line: %l | Column: %c")))))
+
+;; GUI settings
+(menu-bar-mode -1)
+(if (window-system)
+    (progn
+      (add-to-list 'default-frame-alist '(height . 24))
+      (add-to-list 'default-frame-alist '(width . 80))
+      
+      (set-default-font "Source Code Pro Light 20")
+      ;; Disable noisey UI features
+      (scroll-bar-mode 0)
+      (tool-bar-mode 0)
+      (column-number-mode 1)
+      ;; Smooth scrolling
+      (setq mouse-wheel-progressive-speed nil)
+      (setq mouse-wheel-scroll-amount '(1 ((shift) .1) ((control) . nil)))
+      ))
+
 ;; Set the custom face stuff to save to a different file
 (setq custom-file (concat user-emacs-directory "/custom.el"))
 
 ;; ------------------------------ Packages -------------------------------------
-
 (require 'package)
 
 ;; Store all packages in the package path
@@ -76,10 +80,15 @@
   (package-refresh-contents)
   (package-install 'use-package))
 
+(use-package ace-window
+  :config
+  (setq aw-keys '(?a ?b ?c ?d ?e ?f ?g ?h))
+  :bind ("C-x o" . ace-window))
+
 (use-package doom-themes
-  :init
-  (if (window-system) (load-theme 'doom-tomorrow-day t)
-    (load-theme 'doom-dark+ t))
+  :ensure t
+  :config
+  (load-theme 'doom-dark+ t)
   )
 
 (use-package exec-path-from-shell
@@ -88,55 +97,43 @@
     (exec-path-from-shell-initialize))
   )
 
-(use-package ido
-  :init
-  (setq ido-enable-regexp t)
-  (setq ido-separator "\n")
-  (ido-mode 1)
-  )
-
-(add-hook 'ido-setup-hook 'ido-my-keys)
-
 (defun ido-my-keys ()
   "Add my keybindings for ido."
   (define-key ido-common-completion-map (kbd "C-n") 'ido-next-match)
   (define-key ido-common-completion-map (kbd "C-p") 'ido-prev-match) )
 
-
-(use-package iedit)
-
-;;(use-package ivy
-;;  :hook (after-init . ivy-mode)
-;;  )
-
-(use-package jedi
-  :hook (jedi:ac-setup . python-mode)
+(use-package ido
   :init
-  (setq ac-auto-show-menu nil)
-  (add-hook 'python-mode-hook
-          (lambda () (local-set-key (kbd "C-c d") 'jedi:show-doc)))
+  (setq ido-enable-regexp t)
+  (setq ido-separator "\n")
+  (ido-mode 1)
+  (add-hook 'ido-setup-hook 'ido-my-keys)
   )
 
-(use-package latex-preview-pane
-  :config
-  (latex-preview-pane-enable)
-  )
+;; (use-package iedit
+;;   :ensure t
+;;   :bind ("C-x ;" . iedit-mode)
+;;   )
 
 (use-package magit
   :bind ("C-x g" . magit-status)
   )
 
+(use-package multiple-cursors
+  :bind ("C-x ;" . mc/mark-all-words-like-this)
+  :bind ("C-x '" . set-rectangular-region-anchor)
+  )
+
 (use-package org
   :config 
   (setq org-log-done 'time)
-  )
+  ;; Setup org mode for Kanban
+  (setq org-todo-keywords 
+	'((sequence "BACKLOG" "ON DECK" "SPECIFY" "SPECIFY-DONE" "IMPLEMENTING" "IMPLEMENTING-DONE"  "TESTING" "|" "DONE" "DELEGATED")))
+  (setq org-agenda-files '("~/.emacs.d/org"))
+  (setq org-agenda-sorting-strategy '((agenda todo-state-down)))
 
-(use-package plantuml-mode
-  :config
-  (setq plantuml-default-exec-mode 'jar)
-  (setq plantuml-jar-path "~/.emacs.d/plantuml.jar")
-  (setenv "JAVA_HOME" "/Library/Internet Plug-Ins/JavaAppletPlugin.plugin/Contents/Home")
-  (add-to-list 'auto-mode-alist '("\\.uml\\'" . plantuml-mode))
+  :bind ("C-c a" . org-agenda)
   )
 
 (use-package python
@@ -149,33 +146,26 @@
   (setq python-indent-guess-indent-offset t)  
   (setq python-indent-guess-indent-offset-verbose nil)
   (load "~/.emacs.d/packages/pydocs.el") ;; Custom yasnippet documentation
+  (load "~/.emacs.d/packages/pyfun.el") ;; Runs python code like interactive elisp
+  (add-hook 'python-mode-hook 'run-python)
   )
-
 
 (use-package tramp
   :config
   (customize-set-variable 'tramp-default-method "ssh")
   )
 
-(use-package virtualenvwrapper
-  :config
-  (progn
-    (venv-initialize-interactive-shells) 
-    (setq venv-location "~/.venv/")
-    (venv-workon "emacs")
-    ))
-
 (use-package yasnippet
+  :ensure t
   :config
   (yas-global-mode 1)
   )
 
 ;; -------------------------------- Random -------------------------------------
-
-;; Don't show the splash screen - go to straight to scratch
+;; Don't show the splash screen - go straight to scratch
 (setq inhibit-splash-screen t)
 (setq initial-scratch-message
-";;  ---------------------------------------------------------------------------
+";;  ----------------------------------------------------------------------------
 ;;  Write tests before code
 ;;  Write equations before tests
 ;;  Test quantitatively with simulation data
@@ -187,47 +177,21 @@
 ;;  Optimize code for readability before speed
 ;;  Functions should be short, less than 25 lines
 ;;  Files should be short, less than 500 lines
-;;  Write programs that do one thing and do it well. 
-;;  Write programs to work together. 
+;;  Write programs that do one thing and do it well
+;;  Write programs to work together
+;;  Complexity is the enemy
 ;;  ----------------------------------------------------------------------------
 
 ")
-
-(defun top-level-line? (line)
-  "true if the passed in string is a top level statement in python"
-  (cond
-   ((string= "" line) nil)
-   ((string= "\n" (substring line 0 1)) nil)
-   ((not (string= " " (substring line 0 1))) t)
-   (nil nil)))
-
-(defun python-prev-chunk ()
-  "gets the previous chunk of code"
-  (setq initial-point (point))
-  (setq position-start (line-beginning-position))
-  (setq position-end (line-end-position))
-  ;; While the line starts with a space, move up. 
-  (while (not (top-level-line? 
-	       (buffer-substring-no-properties position-start position-end)))
-    (previous-line)
-    (setq position-start (line-beginning-position)))
-  (goto-char initial-point)
-  (buffer-substring-no-properties position-start position-end))
-
-(defun python-eval-print-last-sexp ()
-  "Print result of evaluating current line into current buffer."
+;; --------------------------------- Misc --------------------------------------
+(defun eval-and-replace ()
+  "Replace the preceding sexp with its value."
   (interactive)
-  (let ((res (python-shell-send-string-no-output
-              ;; modify to get a different sexp
-              (python-prev-chunk)))
-        (standard-output (current-buffer)))
-    (when res
-      (terpri)
-      (princ res)
-      (terpri))))
+  (backward-kill-sexp)
+  (condition-case nil
+      (prin1 (eval (read (current-kill 0)))
+             (current-buffer))
+    (error (message "Invalid expression")
+           (insert (current-kill 0)))))
 
-;; run python code in any buffer and output below the buffer
-(global-set-key (kbd "C-c C-j") 'python-eval-print-last-sexp)
-
-
-
+(global-set-key (kbd "C-x C-e") 'eval-and-replace)
