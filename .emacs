@@ -6,6 +6,7 @@
 
 ;; --------------------------------- General -----------------------------------
 (setq ring-bell-function 'ignore)
+(setq default-directory "~") 
 
 (add-to-list 'exec-path "/usr/local/bin/")
 (global-set-key (kbd "C-x C-x") 'execute-extended-command)
@@ -85,6 +86,20 @@
   (setq aw-keys '(?a ?b ?c ?d ?e ?f ?g ?h))
   :bind ("C-x o" . ace-window))
 
+(use-package dante
+  :ensure t
+  :after haskell-mode
+  :commands 'dante-mode
+  :bind ("C-c j" . dante-eval-block)
+  :init
+  (add-hook 'haskell-mode-hook 'flycheck-mode)
+  ;; OR for flymake support:
+  (add-hook 'haskell-mode-hook 'flymake-mode)
+  (remove-hook 'flymake-diagnostic-functions 'flymake-proc-legacy-flymake)
+
+  (add-hook 'haskell-mode-hook 'dante-mode)
+  )
+
 (use-package doom-themes
   :ensure t
   :config
@@ -110,19 +125,19 @@
   (add-hook 'ido-setup-hook 'ido-my-keys)
   )
 
-;; (use-package iedit
-;;   :ensure t
-;;   :bind ("C-x ;" . iedit-mode)
-;;   )
+(use-package iedit
+  :ensure t
+  :bind ("C-x ;" . iedit-mode)
+  )
 
 (use-package magit
   :bind ("C-x g" . magit-status)
   )
 
-(use-package multiple-cursors
-  :bind ("C-x ;" . mc/mark-all-words-like-this)
-  :bind ("C-x '" . set-rectangular-region-anchor)
-  )
+;; (use-package multiple-cursors
+;;   :bind ("C-x ;" . mc/mark-all-words-like-this)
+;;   :bind ("C-x '" . set-rectangular-region-anchor)
+;;   )
 
 (use-package org
   :config 
@@ -132,7 +147,10 @@
 	'((sequence "BACKLOG" "ON DECK" "SPECIFY" "SPECIFY-DONE" "IMPLEMENTING" "IMPLEMENTING-DONE"  "TESTING" "|" "DONE" "DELEGATED")))
   (setq org-agenda-files '("~/.emacs.d/org"))
   (setq org-agenda-sorting-strategy '((agenda todo-state-down)))
-
+  ;; Setup org mode babel
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((python . t) (C . t) (sqlite . t) (shell . t)))
   :bind ("C-c a" . org-agenda)
   )
 
@@ -154,6 +172,10 @@
   :config
   (customize-set-variable 'tramp-default-method "ssh")
   )
+
+(use-package vterm
+  :ensure t
+)
 
 (use-package yasnippet
   :ensure t
