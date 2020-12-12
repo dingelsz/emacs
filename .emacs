@@ -5,14 +5,13 @@
 ;; read and navigate.
 
 ;; --------------------------------- General -----------------------------------
-(setq ring-bell-function 'ignore)
-(setq default-directory "~/") 
 
+(setq default-directory "~/") 
 (add-to-list 'exec-path "/usr/local/bin/")
 (global-set-key (kbd "C-x C-x") 'execute-extended-command)
-(global-set-key (kbd "C-x m") 'man)
 
 (show-paren-mode 1)
+(setq ring-bell-function 'ignore)
 
 ;; A menu to view everything in the kill ring
 (global-set-key "\M-y" '(lambda ()
@@ -60,6 +59,9 @@
   (setq aw-keys '(?a ?b ?c ?d ?e ?f ?g ?h))
   :bind ("C-x o" . ace-window))
 
+(use-package counsel
+  )
+
 (use-package dante
   :ensure t
   :after haskell-mode
@@ -101,6 +103,13 @@
 (use-package magit
   :bind ("C-x g" . magit-status)
   )
+
+(use-package man
+  :bind ("C-x m" . man)
+  :config
+  (custom-set-variables '(Man-notify-method 'bully))
+  )
+
 
 (use-package multiple-cursors
   :bind ("C-x ;" . mc/mark-all-words-like-this)
@@ -160,6 +169,8 @@
 (nano-faces)
 (require 'nano-theme)
 (nano-theme)
+
+(require 'nano-counsel)
 
 ;; Nano header & mode lines (optional)
 (require 'nano-modeline)
