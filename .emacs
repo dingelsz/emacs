@@ -117,6 +117,7 @@
   )
 
 (use-package org
+  :bind ("C-c a" . org-agenda)
   :config 
   (setq org-log-done 'time)
   ;; Setup org mode for Kanban
@@ -128,8 +129,13 @@
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((python . t) (C . t) (sqlite . t) (shell . t)))
-  :bind ("C-c a" . org-agenda)
+  
   )
+
+(use-package org-bullets
+  :ensure t
+  :config
+  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
 (use-package python
   :defer t
@@ -168,6 +174,7 @@
 (require 'nano-faces)
 (nano-faces)
 (require 'nano-theme)
+(require 'nano-theme-light)
 (nano-theme)
 
 (require 'nano-counsel)
@@ -211,3 +218,16 @@
            (insert (current-kill 0)))))
 
 (global-set-key (kbd "C-x C-S-E") 'eval-and-replace)
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   '(org-bullets zenburn-theme yaml-mode writeroom-mode vterm virtualenvwrapper virtualenv use-package sphinx-doc sml-mode smart-mode-line-atom-one-dark-theme slime posframe plantuml-mode parseclj parsec multiple-cursors magit-popup magit lv latex-preview-pane jedi iedit htmlize exec-path-from-shell elpy dracula-theme doom-themes dired-toggle dired-subtree dante csv-mode counsel company-jedi auctex atom-one-dark-theme all-the-icons ace-window)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
