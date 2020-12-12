@@ -6,7 +6,7 @@
 
 ;; --------------------------------- General -----------------------------------
 (setq ring-bell-function 'ignore)
-(setq default-directory "~") 
+(setq default-directory "~/") 
 
 (add-to-list 'exec-path "/usr/local/bin/")
 (global-set-key (kbd "C-x C-x") 'execute-extended-command)
@@ -27,59 +27,33 @@
       kept-new-versions      20 ; how many of the newest versions to keep
       kept-old-versions      5) ; and how many of the old
 
-;; -------------------------------- Visuals ------------------------------------
-;; Configure the line mode bar at the bottom of emacs
-(defun simple-mode-line-render (left right)
-  "Return a string of `window-width' length containing LEFT, and RIGHT
- aligned respectively."
-  (let* ((available-width (- (window-width) (length left) 2)))
-    (format (format " %%s %%%ds " available-width) left right)))
-
-(setq-default mode-line-format
-      '((:eval (simple-mode-line-render
-                ;; left side
-                (format-mode-line "%+%b [%m]")
-                ;; right side
-                (format-mode-line "Line: %l | Column: %c")))))
-
-;; GUI settings
-(menu-bar-mode -1)
-(if (window-system)
-    (progn
-      (add-to-list 'default-frame-alist '(height . 24))
-      (add-to-list 'default-frame-alist '(width . 80))
-      
-      (set-frame-font "Source Code Pro Light 20")
-      ;; Disable noisey UI features
-      (scroll-bar-mode 0)
-      (tool-bar-mode 0)
-      (column-number-mode 1)
-      ;; Smooth scrolling
-      (setq mouse-wheel-progressive-speed nil)
-      (setq mouse-wheel-scroll-amount '(1 ((shift) .1) ((control) . nil)))
-      ))
-
-;; Set the custom face stuff to save to a different file
-(setq custom-file (concat user-emacs-directory "/custom.el"))
 
 ;; ------------------------------ Packages -------------------------------------
-(require 'package)
-
-;; Store all packages in the package path
+;; Store packages in a specific folder for version control
 (setq package-path "~/.emacs.d/packages/")
 (add-to-list 'load-path package-path)
 (setq package-user-dir package-path)
+(let ((default-directory  package-path))
+  (normal-top-level-add-subdirs-to-load-path))
+
+(require 'package)
+(package-initialize)
 
 ;; Add repos
 (add-to-list 'package-archives '("gnu"   . "https://elpa.gnu.org/packages/"))
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
 (add-to-list 'package-archives '("org"   . "https://orgmode.org/elpa/"))
-(package-initialize)
 
 ;; Install use-package
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
   (package-install 'use-package))
+
+;; Setup use-package
+(eval-when-compile
+  (require 'use-package))
+(require 'bind-key)
+(setq use-package-always-ensure t)
 
 (use-package ace-window
   :config
@@ -98,12 +72,6 @@
   (remove-hook 'flymake-diagnostic-functions 'flymake-proc-legacy-flymake)
 
   (add-hook 'haskell-mode-hook 'dante-mode)
-  )
-
-(use-package doom-themes
-  :ensure t
-  :config
-  (load-theme 'doom-dark+ t)
   )
 
 (use-package exec-path-from-shell
@@ -125,19 +93,19 @@
   (add-hook 'ido-setup-hook 'ido-my-keys)
   )
 
-(use-package iedit
-  :ensure t
-  :bind ("C-x ;" . iedit-mode)
-  )
+;;(use-package iedit
+;;  :ensure t
+;;  :bind ("C-x ;" . iedit-mode)
+;;  )
 
 (use-package magit
   :bind ("C-x g" . magit-status)
   )
 
-;; (use-package multiple-cursors
-;;   :bind ("C-x ;" . mc/mark-all-words-like-this)
-;;   :bind ("C-x '" . set-rectangular-region-anchor)
-;;   )
+(use-package multiple-cursors
+  :bind ("C-x ;" . mc/mark-all-words-like-this)
+  :bind ("C-x '" . set-rectangular-region-anchor)
+  )
 
 (use-package org
   :config 
@@ -183,11 +151,25 @@
   (yas-global-mode 1)
   )
 
+;; -------------------------------- Nano ---------------------------------------
+;; Window layout (optional)
+(require 'nano-layout)
+
+;; Theme
+(require 'nano-faces)
+(nano-faces)
+(require 'nano-theme)
+(nano-theme)
+
+;; Nano header & mode lines (optional)
+(require 'nano-modeline)
+
+(provide 'nano)
+
 ;; -------------------------------- Random -------------------------------------
 ;; Don't show the splash screen - go straight to scratch
 (setq inhibit-splash-screen t)
-(setq initial-scratch-message
-";;  ----------------------------------------------------------------------------
+(setq initial-scratch-message ";;  ----------------------------------------------------------------------------
 ;;  Write tests before code
 ;;  Write equations before tests
 ;;  Test quantitatively with simulation data
@@ -205,6 +187,7 @@
 ;;  ----------------------------------------------------------------------------
 
 ")
+
 ;; --------------------------------- Misc --------------------------------------
 (defun eval-and-replace ()
   "Replace the preceding sexp with its value."
@@ -216,4 +199,4 @@
     (error (message "Invalid expression")
            (insert (current-kill 0)))))
 
-(global-set-key (kbd "C-x C-e") 'eval-and-replace)
+(global-set-key (kbd "C-x C-S-E") 'eval-and-replace)
