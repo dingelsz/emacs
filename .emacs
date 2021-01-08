@@ -5,7 +5,7 @@
 ;; read and navigate.
 
 ;; --------------------------------- General -----------------------------------
-
+(setq org-src-fontify-natively t)
 (setq default-directory "~/") 
 (add-to-list 'exec-path "/usr/local/bin/")
 (global-set-key (kbd "C-x C-x") 'execute-extended-command)
@@ -54,14 +54,26 @@
 (require 'bind-key)
 (setq use-package-always-ensure t)
 
-(use-package ace-window
-  :config
-  (setq aw-keys '(?a ?b ?c ?d ?e ?f ?g ?h))
-  :bind ("C-x o" . ace-window))
-
-(use-package counsel
+;; Move to a point in the buffer using tree search
+(use-package avy
+  :bind ("C-c C-s" . avy-goto-char-timer)
   )
 
+;; A collection of useful commands
+(use-package crux
+  :config
+  :bind ("C-c o" . crux-open-with)
+  ("C-c e" . crux-eval-and-replace)
+  ("C-c t" . crux-visit-term-buffer)
+  ("C-c k" . crux-kill-other-buffers)
+  ("C-c I" . crux-find-user-init-file)
+  
+  )
+
+;; Path completion
+(global-set-key (kbd "C-x /") 'comint-dynamic-complete-filename)
+
+;; A haskell IDE
 (use-package dante
   :ensure t
   :after haskell-mode
@@ -76,14 +88,16 @@
   (add-hook 'haskell-mode-hook 'dante-mode)
   )
 
+;; Execute shell commands from the current path
 (use-package exec-path-from-shell
   :init
   (when (memq window-system '(mac ns x))
     (exec-path-from-shell-initialize))
   )
 
+
 (defun ido-my-keys ()
-  "Add my keybindings for ido."
+  "Keybindings for navigating ido results ."
   (define-key ido-common-completion-map (kbd "C-n") 'ido-next-match)
   (define-key ido-common-completion-map (kbd "C-p") 'ido-prev-match) )
 
@@ -95,15 +109,18 @@
   (add-hook 'ido-setup-hook 'ido-my-keys)
   )
 
-;;(use-package iedit
-;;  :ensure t
-;;  :bind ("C-x ;" . iedit-mode)
-;;  )
+;; Edit multiple occurences of a word
+(use-package iedit
+  :ensure t
+  :bind ("C-;" . iedit-mode)
+)
 
+;; Git client
 (use-package magit
   :bind ("C-x g" . magit-status)
   )
 
+;; Manual pages
 (use-package man
   :bind ("C-x m" . man)
   :config
@@ -111,11 +128,12 @@
   )
 
 
-(use-package multiple-cursors
-  :bind ("C-x ;" . mc/mark-all-words-like-this)
-  :bind ("C-x '" . set-rectangular-region-anchor)
-  )
+;;(use-package multiple-cursors
+;;  :bind ("C-x ;" . mc/mark-all-words-like-this)
+;;  :bind ("C-x '" . set-rectangular-region-anchor)
+;;  )
 
+;; Organization mode
 (use-package org
   :bind ("C-c a" . org-agenda)
   :config 
@@ -123,7 +141,7 @@
   ;; Setup org mode for Kanban
   (setq org-todo-keywords 
 	'((sequence "BACKLOG" "ON DECK" "SPECIFY" "SPECIFY-DONE" "IMPLEMENTING" "IMPLEMENTING-DONE"  "TESTING" "|" "DONE" "DELEGATED")))
-  (setq org-agenda-files '("~/.emacs.d/org"))
+  (setq org-agenda-files '("~/Google Drive/org"))
   (setq org-agenda-sorting-strategy '((agenda todo-state-down)))
   ;; Setup org mode babel
   (org-babel-do-load-languages
@@ -132,10 +150,12 @@
   
   )
 
-(use-package org-bullets
-  :ensure t
-  :config
-  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+;; Project management
+(use-package projectile
+  :diminish projectile-mode
+  :config (projectile-mode)
+  :bind-keymap ("C-c p" . projectile-command-map)
+  )
 
 (use-package python
   :defer t
@@ -148,18 +168,37 @@
   (setq python-indent-guess-indent-offset-verbose nil)
   (load "~/.emacs.d/packages/pydocs.el") ;; Custom yasnippet documentation
   (load "~/.emacs.d/packages/pyfun.el") ;; Runs python code like interactive elisp
-  (add-hook 'python-mode-hook 'run-python)
+  (setq python-python-command "/Users/zach/Projects/Programming/Python/miniconda3/bin/python")
   )
 
+;; HTTP library 
+(use-package request)
+
+;; Shows multiple options in interactive mode
+(use-package selectrum
+  :config (selectrum-prescient-mode) (selectrum-mode +1)
+  )
+
+;; Connect to remote machines
 (use-package tramp
   :config
   (customize-set-variable 'tramp-default-method "ssh")
   )
 
+;; Tracks undo history as a tree
+(use-package undo-tree
+  :init
+  (global-undo-tree-mode)
+  :bind
+  ("C-c /" . undo-tree-visualize)
+  )
+
+;; Good terminal
 (use-package vterm
   :ensure t
 )
 
+;; Snippet library
 (use-package yasnippet
   :ensure t
   :config
@@ -176,8 +215,6 @@
 (require 'nano-theme)
 (require 'nano-theme-light)
 (nano-theme)
-
-(require 'nano-counsel)
 
 ;; Nano header & mode lines (optional)
 (require 'nano-modeline)
@@ -207,27 +244,17 @@
 ")
 
 ;; --------------------------------- Misc --------------------------------------
-(defun eval-and-replace ()
-  "Replace the preceding sexp with its value."
-  (interactive)
-  (backward-kill-sexp)
-  (condition-case nil
-      (prin1 (eval (read (current-kill 0)))
-             (current-buffer))
-    (error (message "Invalid expression")
-           (insert (current-kill 0)))))
-
-(global-set-key (kbd "C-x C-S-E") 'eval-and-replace)
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(org-bullets zenburn-theme yaml-mode writeroom-mode vterm virtualenvwrapper virtualenv use-package sphinx-doc sml-mode smart-mode-line-atom-one-dark-theme slime posframe plantuml-mode parseclj parsec multiple-cursors magit-popup magit lv latex-preview-pane jedi iedit htmlize exec-path-from-shell elpy dracula-theme doom-themes dired-toggle dired-subtree dante csv-mode counsel company-jedi auctex atom-one-dark-theme all-the-icons ace-window)))
+   '(undo-tree crux selectrum-prescient selectrum projectile request lpy org-bullets zenburn-theme yaml-mode writeroom-mode vterm virtualenvwrapper virtualenv use-package sphinx-doc sml-mode smart-mode-line-atom-one-dark-theme slime posframe plantuml-mode parseclj parsec multiple-cursors magit-popup magit lv latex-preview-pane iedit htmlize exec-path-from-shell dracula-theme doom-themes dired-toggle dired-subtree dante csv-mode counsel auctex atom-one-dark-theme all-the-icons ace-window)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+(put 'upcase-region 'disabled nil)
