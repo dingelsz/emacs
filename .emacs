@@ -54,9 +54,12 @@
 (require 'bind-key)
 (setq use-package-always-ensure t)
 
+;; Notes on use package:
+;; :init runs code at startup as if it was placed directly in .emacs
+;; :config runs code once the package has been loaded. 
+
 ;; Move to a point in the buffer using tree search
-(use-package avy
-  :bind ("C-c C-s" . avy-goto-char-timer)
+(use-package avy  :bind ("C-:" . avy-goto-char-timer)
   )
 
 ;; A collection of useful commands
@@ -87,6 +90,14 @@
 
   (add-hook 'haskell-mode-hook 'dante-mode)
   )
+
+;; IRC Client
+(use-package erc
+  :config
+  (setq erc-autojoin-channels-alist '(("freenode.net" "#emacs" "#haskell" "python")))
+  (setq erc-hide-list '("JOIN" "PART" "QUIT"))
+  )
+	      
 
 ;; Execute shell commands from the current path
 (use-package exec-path-from-shell
@@ -147,8 +158,20 @@
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((python . t) (C . t) (sqlite . t) (shell . t)))
+  ;; Org-crypt for encryption
+  (require 'org-crypt)
+  (require 'epa-file)
+;;  (custom-set-variables '(epg-gpg-program  "/usr/local/bin/gpg"))
+  (epa-file-enable)
+  
+  (org-crypt-use-before-save-magic)
+  (setq org-tags-exclude-from-inheritance (quote ("crypt")))
+  (setq org-crypt-key nil)
+
+  
   
   )
+
 
 ;; Project management
 (use-package projectile
@@ -250,7 +273,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(undo-tree crux selectrum-prescient selectrum projectile request lpy org-bullets zenburn-theme yaml-mode writeroom-mode vterm virtualenvwrapper virtualenv use-package sphinx-doc sml-mode smart-mode-line-atom-one-dark-theme slime posframe plantuml-mode parseclj parsec multiple-cursors magit-popup magit lv latex-preview-pane iedit htmlize exec-path-from-shell dracula-theme doom-themes dired-toggle dired-subtree dante csv-mode counsel auctex atom-one-dark-theme all-the-icons ace-window)))
+   '(restclient pdf-tools docker-compose-mode dockerfile-mode docker undo-tree crux selectrum-prescient selectrum projectile request lpy org-bullets zenburn-theme yaml-mode writeroom-mode vterm virtualenvwrapper virtualenv use-package sphinx-doc sml-mode smart-mode-line-atom-one-dark-theme slime posframe plantuml-mode parseclj parsec multiple-cursors magit-popup magit lv latex-preview-pane iedit htmlize exec-path-from-shell dracula-theme doom-themes dired-toggle dired-subtree dante csv-mode counsel auctex atom-one-dark-theme all-the-icons ace-window)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

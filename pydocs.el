@@ -1,12 +1,3 @@
-
-;; This buffer is for text that is not saved, and for Lisp evaluation.
-;; To create a file, visit it with C-x C-f and enter text in its buffer.
-(defun tokenize (input)
-  """ Tokenizes a list of arguments"""
-  (let ((chunks (split-string input ","))
-	)
-    chunks))
-
 ;; An argument is made up of a name, optional type and optional default value
 (cl-defstruct argument name type default)
 
@@ -20,11 +11,17 @@
 
 (defun argument-docstring (arg)
   "returns a string representation of the argument"
-  (concat
-   (if (string= (argument-name arg) "") "" (concat ":param " (argument-name arg) ":"))
-   (if (string= (argument-default arg) "") "" (concat " , defaults to `" (argument-default arg) "`"))
-   (if (string= (argument-type arg) "") "" "\n")
-   (if (string= (argument-type arg) "") "" (concat ":type " (argument-name arg) ": " (argument-type arg)))))
+  (let ((name (argument-name arg))
+	(type (argument-type arg))
+	(default (argument-default arg)))
+    (concat
+     (if (string= name "") ""
+       (concat name))
+     (if (string= type "") ""
+       (concat " (" type ")"))
+     (if (string= name"") "" ": ")
+     (if (string= default	"") ""
+       (concat "Defaults to `" default "`.")))))
 
 
 (defun make-docstring (input)
@@ -32,11 +29,30 @@
   (let ((result nil)
 	(args (mapcar 'parse-argument (remove "self" (split-string input ",")))))
     (if (string= input "") ""
-      (while args
-	(setq result (push (argument-docstring (car args)) result))
-	(setq args (cdr args)))
-      ;; Concat all of the doc strings together (flip them because of the stack)
-      (let ((docstring (mapconcat 'identity (reverse result) "\n")))
-	;; If theres more than 1 argument there will be a trailing \n
-	(if (< (length result) 2) docstring
-	  (substring docstring 0 -1))))))
+      (progn
+	(push "Args: " result)
+	(while args
+	  (setq result (push (concat "    " (argument-docstring (car args))) result))
+	  (setq args (cdr args)))
+	;; Concat all of the doc strings together (flip them because of the stack)
+	(let ((docstring (mapconcat 'identity (reverse result) "\n")))
+	  ;; If theres more than 1 argument there will be a trailing \n
+	  (if (< (length result) 2) docstring
+	    (substring docstring 0 -1)))))))
+  
+
+;; Tests
+;;(setq input "arg1: str='hello', arg2: int=2")
+;;(setq args (mapcar 'parse-argument (remove "self" (split-string input ","))))
+
+;; (argument-docstring (car args))
+
+;; (make-docstring "arg1")
+;; (make-docstring "arg1: str")
+;; (make-docstring "arg1: str='hello'")
+
+;; (make-docstring "self, arg1: str='hello'")
+
+;; (make-docstring "self, n, arg1: str='hello'")
+;; (make-docstring "self, n=2, arg1: str='hello'")
+;; (make-docstring "self, n:int = 2, arg1: str='hello'")
