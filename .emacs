@@ -40,7 +40,7 @@
 
 ;; Add repos
 (add-to-list 'package-archives '("gnu"   . "https://elpa.gnu.org/packages/"))
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+;;(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
 (add-to-list 'package-archives '("org"   . "https://orgmode.org/elpa/"))
 
 ;; Install use-package
@@ -59,7 +59,7 @@
 ;; :config runs code once the package has been loaded. 
 
 ;; Move to a point in the buffer using tree search
-(use-package avy  :bind ("C-:" . avy-goto-char-timer)
+(use-package avy  :bind ("C-'" . avy-goto-char-timer)
   )
 
 ;; A collection of useful commands
@@ -94,7 +94,7 @@
 ;; IRC Client
 (use-package erc
   :config
-  (setq erc-autojoin-channels-alist '(("freenode.net" "#emacs" "#haskell" "python")))
+  (setq erc-autojoin-channels-alist '(("freenode.net" "#emacs" "#haskell" "#python" "#mysql")))
   (setq erc-hide-list '("JOIN" "PART" "QUIT"))
   )
 	      
@@ -139,10 +139,10 @@
   )
 
 
-;;(use-package multiple-cursors
+(use-package multiple-cursors
 ;;  :bind ("C-x ;" . mc/mark-all-words-like-this)
 ;;  :bind ("C-x '" . set-rectangular-region-anchor)
-;;  )
+  )
 
 ;; Organization mode
 (use-package org
@@ -167,11 +167,7 @@
   (org-crypt-use-before-save-magic)
   (setq org-tags-exclude-from-inheritance (quote ("crypt")))
   (setq org-crypt-key nil)
-
-  
-  
   )
-
 
 ;; Project management
 (use-package projectile
@@ -189,6 +185,8 @@
   :init
   (setq python-indent-guess-indent-offset t)  
   (setq python-indent-guess-indent-offset-verbose nil)
+  (setq python-shell-interpreter "Projects/Programming/Python/miniconda3/envs/main/bin/ipython"
+	python-shell-interpreter-args "-i --simple-prompt --InteractiveShell.display_page=True")
   (load "~/.emacs.d/packages/pydocs.el") ;; Custom yasnippet documentation
   (load "~/.emacs.d/packages/pyfun.el") ;; Runs python code like interactive elisp
   (setq python-python-command "/Users/zach/Projects/Programming/Python/miniconda3/bin/python")
@@ -228,21 +226,26 @@
   (yas-global-mode 1)
   )
 
-;; -------------------------------- Nano ---------------------------------------
-;; Window layout (optional)
-(require 'nano-layout)
+;; --------------------------------- Themes ------------------------------------
+;; Themes
+(if (window-system)
+    (progn
+      (require 'nano-layout)
 
-;; Theme
-(require 'nano-faces)
-(nano-faces)
-(require 'nano-theme)
-(require 'nano-theme-light)
-(nano-theme)
+      ;; Theme
+      (require 'nano-faces)
+      (nano-faces)
+      (require 'nano-theme)
+      (require 'nano-theme-light)
+      (nano-theme)
 
-;; Nano header & mode lines (optional)
-(require 'nano-modeline)
-
-(provide 'nano)
+      ;; Nano header & mode lines (optional)
+      (require 'nano-modeline)
+      
+      (provide 'nano)
+      )
+  (load-theme 'doom-dark+ t)
+)
 
 ;; -------------------------------- Random -------------------------------------
 ;; Don't show the splash screen - go straight to scratch
@@ -273,7 +276,8 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(restclient pdf-tools docker-compose-mode dockerfile-mode docker undo-tree crux selectrum-prescient selectrum projectile request lpy org-bullets zenburn-theme yaml-mode writeroom-mode vterm virtualenvwrapper virtualenv use-package sphinx-doc sml-mode smart-mode-line-atom-one-dark-theme slime posframe plantuml-mode parseclj parsec multiple-cursors magit-popup magit lv latex-preview-pane iedit htmlize exec-path-from-shell dracula-theme doom-themes dired-toggle dired-subtree dante csv-mode counsel auctex atom-one-dark-theme all-the-icons ace-window)))
+   '(ein paredit geiser racket-mode magit restclient pdf-tools docker-compose-mode dockerfile-mode docker undo-tree crux selectrum-prescient selectrum projectile request lpy org-bullets zenburn-theme yaml-mode writeroom-mode vterm virtualenvwrapper virtualenv use-package sphinx-doc sml-mode smart-mode-line-atom-one-dark-theme slime posframe plantuml-mode parseclj parsec multiple-cursors lv latex-preview-pane iedit htmlize exec-path-from-shell dracula-theme doom-themes dired-toggle dired-subtree dante csv-mode counsel auctex atom-one-dark-theme all-the-icons ace-window))
+ '(python-shell-buffer-name "vterm"))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
