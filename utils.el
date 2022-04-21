@@ -44,3 +44,38 @@
 
 
 
+(defun read-file (filename)
+  "Return the contents of FILENAME."
+  (with-temp-buffer
+    (insert-file-contents filename)
+    (buffer-string)))
+
+(defun load-ssh-hosts ()
+  "Loads all the hosts from the ssh config file"
+  (mapcar (lambda (x) (second (split-string x " "))) 
+	  (remove-if-not (lambda (x) (string= "Host " (substring x 0 5)))
+			 (remove-if (lambda (x) (string= x ""))
+				    (mapcar #'string-trim-left
+					    (split-string (read-file "~/.ssh/config") "\n"))))))
+
+(defun ssh ()
+  "Opens a new shell and ssh's into the given host"
+  (interactive)
+  (let ((address (ido-completing-read "Address: " (load-ssh-hosts) :REQUIRE-MATCH t)))
+    (progn 
+      (vterm)
+      (rename-buffer address)
+      (vterm-send-string (format "ssh %s" address))
+      (vterm-send-return))))
+
+(defun zen (width)
+  "Centers a buffer in the window"
+  (interactive "nBuffer width: ")
+  (let* ((adj          (- (window-text-width)
+                          width))
+         (total-margin (+ adj
+                          left-margin-width
+                          right-margin-width)))
+    (setq left-margin-width  (/ total-margin 2))
+    (setq right-margin-width (- total-margin left-margin-width)))
+  (set-window-buffer (selected-window) (current-buffer)))
