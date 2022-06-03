@@ -3,14 +3,30 @@
 ;; A solid emacs config. This config aims to have as little dependencies as
 ;; possible in order to make it more portable. The config file should be easy
 ;; read and navigate.
-
 ;; --------------------------------- General -----------------------------------
 (setq org-src-fontify-natively t)
 (setq default-directory "~/") 
 (add-to-list 'exec-path "/usr/local/bin/")
 (global-set-key (kbd "C-x C-x") 'execute-extended-command)
 
-(pixel-scroll-precision-mode)
+;; Smooth scrolling & Turn off text resizing via scroll
+;; (pixel-scroll-precision-mode)
+(global-set-key (kbd "<C-wheel-down>") 'ignore)
+(global-set-key (kbd "<C-wheel-up>") 'ignore)
+
+;; Path completion
+(global-set-key (kbd "C-x ~") #'(lambda ()
+				  (interactive)
+				  (insert "~/")
+				  (comint-dynamic-complete-filename)))
+(global-set-key (kbd "C-x /") #'(lambda ()
+				  (interactive)
+				  (insert "/")
+				  (comint-dynamic-complete-filename)))
+(global-set-key (kbd "C-x .") #'(lambda ()
+				  (interactive)
+				  (insert "./")
+				  (comint-dynamic-complete-filename)))
 
 (show-paren-mode 1)
 (setq ring-bell-function 'ignore)
@@ -20,13 +36,23 @@
 			  (interactive)
 			  (popup-menu 'yank-menu)))
 
+;; Backup and AutoSave. Note, backup saves old versions of files when we
+;; overwrite them. Autosave makes saves after we make changes but before
+;; we save.
 ;; Backup files to the path below. Version controll them as well!
-(setq backup-directory-alist '(("." . "~/.emacs.d/backup"))
-      backup-by-copying      t  ; Don't de-link hard links
-      version-control        t  ; Use version numbers on backups
-      delete-old-versions    t  ; Automatically delete excess backups:
-      kept-new-versions      20 ; how many of the newest versions to keep
-      kept-old-versions      5) ; and how many of the old
+(setq backup-directory-alist `(("." . ,(concat user-emacs-directory "backup")))
+      backup-by-copying      t  ;; Don't de-link hard links
+      version-control        t  ;; Use version numbers on backups
+      delete-old-versions    t  ;; Automatically delete excess backups:
+      kept-new-versions      20 ;; how many of the newest versions to keep
+      kept-old-versions      5) ;; and how many of the old
+(unless (file-directory-p "~/.emacs.d/auto-save")
+  (make-directory "~/.emacs.d/auto-save"))
+(setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save/" t)))
+
+;; Tabs
+(setq tab-always-indent 'complete)
+(add-to-list 'completion-styles 'initials t)
 
 ;; Window size management
 (global-set-key (kbd "C-S-<right>") 'enlarge-window-horizontally)
@@ -38,11 +64,11 @@
 (global-set-key (kbd "C-x ,") 'rename-buffer)
 
 ;; -----------------------------------Custom------------------------------------
-(load "~/.emacs.d/utils.el")
+(when (file-exists-p "~/.emacs.d/utils.el")
+  (load "~/.emacs.d/utils.el"))
 
 (defun my-extend-return ()
   (local-set-key (kbd "<C-return>") #'extend-comment))
-;; 
 
 (add-hook 'emacs-lisp-mode-hook #'my-extend-return)
 (add-hook 'lisp-mode-hook #'my-extend-return)
@@ -55,6 +81,8 @@
 	  
 ;; ------------------------------ Packages -------------------------------------
 ;; Store packages in a specific folder for version control
+(unless (file-directory-p "~/.emacs.d/packages")
+  (make-directory "~/.emacs.d/packages" t))
 (setq package-path "~/.emacs.d/packages/")
 (add-to-list 'load-path package-path)
 (setq package-user-dir package-path)
@@ -94,7 +122,6 @@
   ("M-y" . #'aya-expand)
   :init (setq aya-marker "$"))
 
-
 ;; Move to a point in the buffer using tree search
 (use-package avy
   :bind
@@ -102,16 +129,12 @@
 
 ;; A collection of useful commands
 (use-package crux
-  :config
   :bind
   ("C-c o" . crux-open-with)
   ("C-c e" . crux-eval-and-replace)
   ("C-c t" . crux-visit-term-buffer)
   ("C-c k" . crux-kill-other-buffers)
   ("C-c I" . crux-find-user-init-file))
-
-;; Path completion
-(global-set-key (kbd "C-x /") 'comint-dynamic-complete-filename)
 
 ;; A haskell IDE
 (use-package dante
@@ -168,18 +191,30 @@
   (when (memq window-system '(mac ns x))
     (exec-path-from-shell-initialize)))
 
+(use-package geiser
+  :defer t
+  :init (add-hook 'scheme-mode-hook 'geiser-mode)
+  :commands geiser-mode)
 
 (defun ido-my-keys ()
   "Keybindings for navigating ido results ."
   (define-key ido-common-completion-map (kbd "C-n") 'ido-next-match)
   (define-key ido-common-completion-map (kbd "C-p") 'ido-prev-match))
 
+;; Hippie Expand
+(global-set-key (kbd "C-<tab>") 'hippie-expand)
+
 (use-package ido
   :init
   (setq ido-enable-regexp t)
   (setq ido-separator "\n")
+  (setq ido-everywhere t)
+  (setq ido-use-filename-at-point 'guess)
+  (setq ido-create-new-buffer 'always)
   (ido-mode 1)
-  (add-hook 'ido-setup-hook 'ido-my-keys))
+  (add-hook 'ido-setup-hook 'ido-my-keys)
+  :bind ("C-<tab>" . ido-hippie-expand)
+)
 
 ;; Edit multiple occurences of a word
 (use-package iedit
@@ -196,31 +231,22 @@
   :config
   (custom-set-variables '(Man-notify-method 'bully)))
 
-
-(use-package multiple-cursors
-  :bind ("C-x ;" . mc/mark-all-words-like-this)
-  :bind ("C-x '" . set-rectangular-region-anchor))
+;; Have more than one cursor at a time
+(use-package multiple-cursors)
 
 ;; Organization mode
 (use-package org
   :bind ("C-c a" . org-agenda)
   :config 
-  (setq org-log-done 'time)
-  ;; Setup org mode for Kanban
-  (setq org-todo-keywords 
-	'((sequence "BACKLOG" "ON DECK" "SPECIFY" "IMPLEMENTING" "TESTING" "|" "DONE" "DELEGATED")))
-  (setq org-agenda-files '("~/Google Drive/org"))
-  (setq org-agenda-sorting-strategy '((agenda todo-state-down)))
-  ;; Setup org mode babel
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((python . t) (C . t) (sqlite . t) (shell . t) (ledger . t) (lisp . t)))
+
   ;; Org-crypt for encryption
   (require 'org-crypt)
   (require 'epa-file)
 ;;  (custom-set-variables '(epg-gpg-program  "/usr/local/bin/gpg"))
   (epa-file-enable)
-  
   (org-crypt-use-before-save-magic)
   (setq org-tags-exclude-from-inheritance (quote ("crypt")))
   (setq org-crypt-key nil)
@@ -231,6 +257,7 @@
   (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
   (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
   (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
+  (add-hook 'scheme-mode-hook           #'enable-paredit-mode)
   (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode))
 
 ;; Project management
@@ -261,10 +288,6 @@
 ;; HTTP library 
 (use-package request)
 
-;; Shows multiple options in interactive mode
-(use-package selectrum
-  :config (selectrum-prescient-mode) (selectrum-mode +1))
-
 ;; slime setup
 (use-package slime
   :init
@@ -278,31 +301,10 @@
 	  #'enable-paredit-mode)
   (show-paren-mode 1))
 
-;; A nice theme
-(use-package stimmung-themes
-  :demand t
-  :ensure t
-  :config
-  (when (window-system)
-    (progn
-      (stimmung-themes-load-light)
-      (tool-bar-mode -1)
-      (scroll-bar-mode -1)
-      (set-frame-font "Roboto Mono Light 14"))))
-
 ;; Connect to remote machines
 (use-package tramp
   :config
   (customize-set-variable 'tramp-default-method "ssh"))
-
-;; Tracks undo history as a tree
-(use-package undo-tree
-  :init
-  (global-undo-tree-mode)
-  :bind
-  ("C-c /" . undo-tree-visualize)
-  :config
-  (setq undo-tree-enable-undo-in-region nil))
 
 ;; Good terminal
 (use-package vterm  :ensure t)
@@ -314,48 +316,46 @@
   (yas-global-mode 1))
 
 ;; --------------------------------- Themes ------------------------------------
-;; Themes
-
+;; Terminal
 (unless (window-system)
     (progn
-      (load-theme 'wombat)
+      (load-theme 'wombat t)
       (menu-bar-mode -1)))
+;; Window
+(when (window-system)
+  (progn
+    (load-theme 'clues t) 
+    (tool-bar-mode -1)
+    (scroll-bar-mode -1)
+    (set-frame-font "Roboto Mono Light 14")))
 
 ;; -------------------------------- Random -------------------------------------
 ;; Don't show the splash screen - go straight to scratch
 (setq inhibit-splash-screen t)
 (setq initial-scratch-message ";;  ----------------------------------------------------------------------------
-;;  Write tests before code
-;;  Write equations before tests
-;;  Test quantitatively with simulation data
-;;  Test qualitatively with real data
-;;  Automate tests
-;;  Use a package instead of DIY
-;;  Test the package
-;;  Optimize code later
-;;  Optimize code for readability before speed
-;;  Functions should be short, less than 25 lines
-;;  Files should be short, less than 500 lines
-;;  Write programs that do one thing and do it well
-;;  Write programs to work together
-;;  Complexity is the enemy
+;; | Write tests before code
+;; | Write equations before tests
+;; | Test quantitatively with simulation data
+;; | Test qualitatively with real data
+;; | Automate tests
+;; | Use a package instead of DIY
+;; | Test the package
+;; | Optimize code later
+;; | Optimize code for readability before speed
+;; | Functions should be short, less than 25 lines
+;; | Files should be short, less than 500 lines
+;; | Write programs that do one thing and do it well
+;; | Write programs to work together
+;; | Complexity is the enemy
+;; | An implementation should be conservative in its sending behavior, and 
+;;   liberal in its receiving behavior.
 ;;  ----------------------------------------------------------------------------
 
 ")
-
 ;; --------------------------------- Misc --------------------------------------
-
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(zenburn-theme writeroom-mode vterm virtualenvwrapper virtualenv use-package undo-tree telega stimmung-themes sr-speedbar spinner sphinx-doc solidity-mode sml-mode smart-mode-line-atom-one-dark-theme slime selectrum-prescient restclient racket-mode pyvenv python-environment projectile posframe plantuml-mode planet-theme pdf-tools parseclj parsec paredit org-bullets noxml-fold nord-theme neotree nano-theme markdown-mode magit lpy log4j-mode latex-preview-pane json-process-client json-mode js2-refactor hy-mode htmlize ht highlight-indentation geiser exec-path-from-shell epc ein dracula-theme doom-themes doom-modeline dockerfile-mode docker-compose-mode dired-toggle dired-subtree dante csv-mode crux conda auto-yasnippet auto-complete auctex atom-one-dark-theme async))
- '(tramp-default-method "ssh"))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+)
