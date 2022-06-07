@@ -1,0 +1,10 @@
+# -*- mode: org; -*-
+
+#+OPTIONS: html-style:nil
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="///Users/zach/.emacs.d/org-html-rtd/src/readtheorg_theme/css/htmlize.css"/>
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="///Users/zach/.emacs.d/org-html-rtd/src/readtheorg_theme/css/readtheorg.css"/>
+
+#+HTML_HEAD: <script type="text/javascript" src="///Users/zach/.emacs.d/org-html-rtd/src/lib/js/jquery.min.js"></script>
+#+HTML_HEAD: <script type="text/javascript" src="///Users/zach/.emacs.d/org-html-rtd/src/lib/js/bootstrap.min.js"></script>
+#+HTML_HEAD: <script type="text/javascript" src="///Users/zach/.emacs.d/org-html-rtd/src/lib/js/jquery.stickytableheaders.min.js"></script>
+#+HTML_HEAD: <script type="text/javascript" src="///Users/zach/.emacs.d/org-html-rtd/src/readtheorg_theme/js/readtheorg.js"></script>

@@ -131,7 +131,7 @@
 (use-package crux
   :bind
   ("C-c o" . crux-open-with)
-  ("C-c e" . crux-eval-and-replace)
+  ("C-c C-e" . crux-eval-and-replace)
   ("C-c t" . crux-visit-term-buffer)
   ("C-c k" . crux-kill-other-buffers)
   ("C-c I" . crux-find-user-init-file))
@@ -211,6 +211,7 @@
   (setq ido-everywhere t)
   (setq ido-use-filename-at-point 'guess)
   (setq ido-create-new-buffer 'always)
+  (setq ido-enable-flex-matching t)
   (ido-mode 1)
   (add-hook 'ido-setup-hook 'ido-my-keys)
   :bind ("C-<tab>" . ido-hippie-expand)
@@ -237,20 +238,37 @@
 ;; Organization mode
 (use-package org
   :bind ("C-c a" . org-agenda)
-  :config 
+  :config
+  ;; TODO list
+  (setq org-log-done 'time) ;; Adds a timestamp when an org todo item is done
+  
+  ;; Inline images
+  (setq org-startup-with-inline-images t)
+  (setq org-image-actual-width nil)
+
+  ;; Babel - Literate programming
   (org-babel-do-load-languages
    'org-babel-load-languages
-   '((python . t) (C . t) (sqlite . t) (shell . t) (ledger . t) (lisp . t)))
+   '((python . t) (C . t) (sqlite . t) (shell . t) (lisp . t)))
+  (setq org-src-tab-acts-natively t) ;; Fixes weird SQLite indent issue in babel
 
+  ;; EPA - Used for encryption
+  (require 'epa-file)
+  (custom-set-variables '(epg-gpg-program  "/usr/local/bin/gpg"))
   ;; Org-crypt for encryption
   (require 'org-crypt)
-  (require 'epa-file)
-;;  (custom-set-variables '(epg-gpg-program  "/usr/local/bin/gpg"))
-  (epa-file-enable)
   (org-crypt-use-before-save-magic)
+  (setq org-crypt-key "7BA31E7A1DE0A2C4")
   (setq org-tags-exclude-from-inheritance (quote ("crypt")))
-  (setq org-crypt-key nil)
   (add-hook 'org-mode-hook #'visual-line-mode))
+
+(use-package plantuml-mode
+  :config
+  (setq org-plantuml-jar-path (expand-file-name "~/.emacs.d/plantuml.jar"))
+  (setq plantuml-default-exec-mode 'jar)
+  (org-babel-do-load-languages 'org-babel-load-languages '((plantuml . t))))
+
+(use-package htmlize)
 
 (use-package paredit
   :config
@@ -321,12 +339,13 @@
     (progn
       (load-theme 'wombat t)
       (menu-bar-mode -1)))
-;; Window
+;; GUI
 (when (window-system)
   (progn
     (load-theme 'clues t) 
     (tool-bar-mode -1)
     (scroll-bar-mode -1)
+    (pixel-scroll-precision-mode t)
     (set-frame-font "Roboto Mono Light 14")))
 
 ;; -------------------------------- Random -------------------------------------
@@ -358,4 +377,15 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
-)
+ '(epg-gpg-program "/usr/local/bin/gpg")
+ '(org-agenda-files '("~/Documents/org/scratch.org"))
+ '(package-selected-packages
+   '(htmlize plantuml-mode vterm use-package slime request projectile paredit multiple-cursors magit iedit geiser exec-path-from-shell doom-modeline dante crux clues-theme auto-yasnippet ace-window))
+ '(safe-local-variable-values '((org-confirm-babel-evaluate)))
+ '(warning-suppress-types '((comp))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )

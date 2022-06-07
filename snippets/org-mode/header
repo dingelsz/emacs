@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: header
+# key: header
+# --
+# -*- org-confirm-babel-evaluate: nil -*-
+#+TITLE: $1
+#+SETUPFILE: ~/.emacs.d/org-html-rtd/theme.setup
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+LANGUAGE:  en
+$0

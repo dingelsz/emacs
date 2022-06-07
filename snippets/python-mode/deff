@@ -1,0 +1,16 @@
+# -*- mode: snippet -*-
+# name: def
+# key: def
+# contributer: Zach Dingels
+# --
+
+def $1($2) -> $3:
+    """$0${2:$
+	(if (not (string= yas-text \"\")) 
+            (concat \"\\n\\n\" (make-docstring yas-text))
+            "")
+    }
+    Returns:
+        ${3:$(concat "\\t" yas-text)}: $4
+    """
+
