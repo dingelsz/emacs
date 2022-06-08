@@ -70,6 +70,9 @@
 (defun my-extend-return ()
   (local-set-key (kbd "<C-return>") #'extend-comment))
 
+;; A quick terminal
+(global-set-key (kbd "C-x t") #'terminal)
+
 (add-hook 'emacs-lisp-mode-hook #'my-extend-return)
 (add-hook 'lisp-mode-hook #'my-extend-return)
 (add-hook 'lisp-interaction-mode-hook #'my-extend-return)
@@ -132,7 +135,6 @@
   :bind
   ("C-c o" . crux-open-with)
   ("C-c C-e" . crux-eval-and-replace)
-  ("C-c t" . crux-visit-term-buffer)
   ("C-c k" . crux-kill-other-buffers)
   ("C-c I" . crux-find-user-init-file))
 
@@ -378,7 +380,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(epg-gpg-program "/usr/local/bin/gpg")
- '(org-agenda-files '("~/Documents/org/scratch.org"))
+ '(org-agenda-files '("~/org/todo.org" "/Users/zach/org/org_notes.org"))
  '(package-selected-packages
    '(htmlize plantuml-mode vterm use-package slime request projectile paredit multiple-cursors magit iedit geiser exec-path-from-shell doom-modeline dante crux clues-theme auto-yasnippet ace-window))
  '(safe-local-variable-values '((org-confirm-babel-evaluate)))

@@ -4,6 +4,7 @@
 # --
 # -*- org-confirm-babel-evaluate: nil -*-
 #+TITLE: $1
+#+EXPORT_FILE_NAME: ./exports/$2.html
 #+SETUPFILE: ~/.emacs.d/org-html-rtd/theme.setup
 #+EXPORT_EXCLUDE_TAGS: noexport
 #+LANGUAGE:  en
