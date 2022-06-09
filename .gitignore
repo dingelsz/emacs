@@ -1,3 +1,21 @@
+# Ignore everything and whitelist what we want to sync
+*
+!*/
+packages/*/
+
+# Whitelist: 
+!.gitignore
+!init.el
+!/README.md
+!utils.el
+!org-html-rtd/**
+!snippets/**
+
+# My own "Packages"
+!packages/pydocs.el
+!packages/pyfun.el
+
+
+# Block
 .DS_Store
-.#.*
-**/#*#
+

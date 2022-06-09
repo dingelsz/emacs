@@ -70,6 +70,8 @@
 (defun my-extend-return ()
   (local-set-key (kbd "<C-return>") #'extend-comment))
 
+(defalias 'yes-or-no-p 'y-or-n-p)
+
 ;; A quick terminal
 (global-set-key (kbd "C-x t") #'terminal)
 
@@ -239,10 +241,82 @@
 
 ;; Organization mode
 (use-package org
-  :bind ("C-c a" . org-agenda)
+  :bind ("C-S-a" . org-agenda)
   :config
+  (setq org-directory "~/org")
+  ;; Agenda
+  (setq org-agenda-files '("~/org"))
+  (setq org-agenda-span 'day)
+  ;; Speed Commands
+  (setq org-use-speed-commands t)
+  (setq org-speed-commands-user (quote (("s" . org-save-all-org-buffers)
+					("w" . org-refile)
+					("z" . org-add-note))))
   ;; TODO list
   (setq org-log-done 'time) ;; Adds a timestamp when an org todo item is done
+  (setq org-use-fast-todo-selection t)
+
+  (setq org-todo-keywords '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
+			    (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)" "PHONE" "MEETING")))
+  (setq org-todo-keyword-faces
+      (quote (("TODO" :foreground "red" :weight bold)
+              ("NEXT" :foreground "blue" :weight bold)
+              ("DONE" :foreground "forest green" :weight bold)
+              ("WAITING" :foreground "orange" :weight bold)
+              ("HOLD" :foreground "magenta" :weight bold)
+              ("CANCELLED" :foreground "forest green" :weight bold)
+              ("MEETING" :foreground "forest green" :weight bold))))
+
+  (setq org-todo-state-tags-triggers
+      (quote (("CANCELLED" ("CANCELLED" . t))
+              ("WAITING" ("WAITING" . t))
+              ("HOLD" ("WAITING") ("HOLD" . t))
+              (done ("WAITING") ("HOLD"))
+              ("TODO" ("WAITING") ("CANCELLED") ("HOLD"))
+              ("NEXT" ("WAITING") ("CANCELLED") ("HOLD"))
+              ("DONE" ("WAITING") ("CANCELLED") ("HOLD")))))
+  
+  ;; Org Capture
+  (global-set-key (kbd "C-c c") 'org-capture)
+  (setq org-capture-templates
+      (quote (("t" "Task" entry (file "~/org/refile.org")
+               "* TODO %?\n%U\n%a\n" :clock-in t :clock-resume t)
+              ("n" "Note" entry (file "~/org/refile.org")
+               "* %? :NOTE:\n%U\n%a\n" :clock-in t :clock-resume t)
+              ("h" "Habit" entry (file "~/org/refile.org")
+               "* NEXT %?\n%U\n%a\nSCHEDULED: %(format-time-string \"%<<%Y-%m-%d %a .+1d/3d>>\")\n:PROPERTIES:\n:STYLE: habit\n:REPEAT_TO_STATE: NEXT\n:END:\n"))))
+  (setq org-refile-targets (quote ((nil :maxlevel . 9)
+                                   (org-agenda-files :maxlevel . 9))))
+  (setq org-outline-path-complete-in-steps nil)
+  (setq org-completion-use-ido t)
+
+  ;; Agenda
+  ;; Do not dim blocked tasks
+  (setq org-agenda-dim-blocked-tasks nil)
+  ;; Custom agenda command definitions
+(setq org-agenda-custom-commands
+      (quote (("N" "Notes" tags "NOTE"
+               ((org-agenda-overriding-header "Notes")
+                (org-tags-match-list-sublevels t)))
+              ("h" "Habits" tags-todo "STYLE=\"habit\""
+               ((org-agenda-overriding-header "Habits")
+                (org-agenda-sorting-strategy
+                 '(todo-state-down effort-up category-keep))))
+              (" " "Personal Agenda"
+               ((agenda "" ((org-agenda-span 1)))
+                (tags "REFILE"
+                      ((org-agenda-overriding-header "Tasks to Refile")
+                       (org-tags-match-list-sublevels nil)))
+		(tags-todo "*/!NEXT"
+                      ((org-agenda-overriding-header "Next Tasks")))
+		(tags-todo "*/WAITING"
+			   ((org-agenda-overriding-header "Waiting Tasks")))
+		(tags-todo "-REFILE/TODO"
+                      ((org-agenda-overriding-header "Backlog"))))
+               nil))))
+  ;; Compact the block agenda view
+  (setq org-agenda-compact-blocks t)
+
   
   ;; Inline images
   (setq org-startup-with-inline-images t)
@@ -380,7 +454,6 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(epg-gpg-program "/usr/local/bin/gpg")
- '(org-agenda-files '("~/org/todo.org" "/Users/zach/org/org_notes.org"))
  '(package-selected-packages
    '(htmlize plantuml-mode vterm use-package slime request projectile paredit multiple-cursors magit iedit geiser exec-path-from-shell doom-modeline dante crux clues-theme auto-yasnippet ace-window))
  '(safe-local-variable-values '((org-confirm-babel-evaluate)))
