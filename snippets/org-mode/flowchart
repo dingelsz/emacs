@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: flowchart
+# key: flowchart
+# --
+#+BEGIN_SRC plantuml :file assets/$1.png
+  @startuml
+  (*) --> x
+  x --> (*)
+  @enduml
+#+END_SRC

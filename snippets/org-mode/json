@@ -1,0 +1,11 @@
+# -*- mode: snippet -*-
+# name: json
+# key: json
+# --
+#+BEGIN_SRC plantuml :file assets/json.png
+  @startjson
+  {
+      $0  	
+  }
+@endjson
+#+END_SRC

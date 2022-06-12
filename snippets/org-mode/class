@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: class
+# key: class
+# --
+#+BEGIN_SRC plantuml :file assets/$1.png
+class $2 {
+  $0
+}
+#+END_SRC
