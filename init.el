@@ -4,8 +4,11 @@
 ;; possible in order to make it more portable. The config file should be easy
 ;; read and navigate.
 ;; --------------------------------- General -----------------------------------
-(setq org-src-fontify-natively t)
-(setq default-directory "~/") 
+(setq org-src-fontify-natively t
+      default-directory "~/"
+      ring-bell-function 'ignore
+      tab-always-indent 'complete)
+
 (add-to-list 'exec-path "/usr/local/bin/")
 (global-set-key (kbd "C-x C-x") 'execute-extended-command)
 
@@ -25,16 +28,15 @@
 				  (comint-dynamic-complete-filename)))
 (global-set-key (kbd "C-x .") #'(lambda ()
 				  (interactive)
-				  (insert "./")
+~/				  (insert "./")
 				  (comint-dynamic-complete-filename)))
 
 (show-paren-mode 1)
-(setq ring-bell-function 'ignore)
 
 ;; A menu to view everything in the kill ring
-(global-set-key "\M-y" #'(lambda ()
-			  (interactive)
-			  (popup-menu 'yank-menu)))
+(global-set-key (kbd "C-x y") '(lambda ()
+				(interactive)
+				(popup-menu 'yank-menu)))
 
 ;; Backup and AutoSave. Note, backup saves old versions of files when we
 ;; overwrite them. Autosave makes saves after we make changes but before
@@ -51,7 +53,6 @@
 (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save/" t)))
 
 ;; Tabs
-(setq tab-always-indent 'complete)
 (add-to-list 'completion-styles 'initials t)
 
 ;; Window size management
@@ -83,7 +84,10 @@
   (c-set-offset 'substatement-open 0))
 (add-hook 'c++-mode-hook 'my-c++-mode-hook)
 
-	  
+(add-to-list 'safe-local-variable-values
+	     '(org-babel-python-command . "/Users/zach/projects/miniconda3/envs/main/bin/ipython"))
+(add-to-list 'safe-local-variable-values
+	     '(org-confirm-babel-evaluate . nil))
 ;; ------------------------------ Packages -------------------------------------
 ;; Store packages in a specific folder for version control
 (unless (file-directory-p "~/.emacs.d/packages")
@@ -241,9 +245,10 @@
 
 ;; Organization mode
 (use-package org
-  :bind ("C-S-a" . org-agenda)
+  :bind ("C-c a" . org-agenda)
   :config
   (setq org-directory "~/org")
+  (setq org-startup-folded t)
   ;; Agenda
   (setq org-agenda-files '("~/org"))
   (setq org-agenda-span 'day)
@@ -281,18 +286,32 @@
   (setq org-capture-templates
       (quote (("t" "Task" entry (file "~/org/refile.org")
                "* TODO %?\n%U\n%a\n" :clock-in t :clock-resume t)
+	      ("a" "Appointment" entry (file "~/org/refile.org")
+               "* TODO %?: :APPOINTMENT:\n%U\n%a\n" :clock-in t :clock-resume t)
               ("n" "Note" entry (file "~/org/refile.org")
                "* %? :NOTE:\n%U\n%a\n" :clock-in t :clock-resume t)
               ("h" "Habit" entry (file "~/org/refile.org")
-               "* NEXT %?\n%U\n%a\nSCHEDULED: %(format-time-string \"%<<%Y-%m-%d %a .+1d/3d>>\")\n:PROPERTIES:\n:STYLE: habit\n:REPEAT_TO_STATE: NEXT\n:END:\n"))))
-  (setq org-refile-targets (quote ((nil :maxlevel . 9)
-                                   (org-agenda-files :maxlevel . 9))))
+               "* NEXT %? :HABIT:\n%U\n%a\nSCHEDULED: %(format-time-string \"%<<%Y-%m-%d %a .+1d/3d>>\")\n:PROPERTIES:\n:STYLE: habit\n:REPEAT_TO_STATE: NEXT\n:END:\n"))))
+  (setq org-refile-targets (quote ((nil :maxlevel . 3)
+                                   (org-agenda-files :maxlevel . 3))))
+  (setq org-refile-use-outline-path 'file)
   (setq org-outline-path-complete-in-steps nil)
+;; Use cache and invalidate every 5 minutes
+;; (setq org-refile-use-cache t)
+;; (run-with-idle-timer 300 t (lambda ()
+;;                           (org-refile-cache-clear)
+;;                           (org-refile-get-targets)))
+  (defun +org-search ()
+    (interactive)
+    (org-refile '(4)))
+  (setq completion-styles '(substring partial-completion)) ;; Fuzzy seach
   (setq org-completion-use-ido t)
 
   ;; Agenda
   ;; Do not dim blocked tasks
   (setq org-agenda-dim-blocked-tasks nil)
+  ;; Highlight the row the cursor is on
+  (add-hook 'org-agenda-finalize-hook #'hl-line-mode)
   ;; Custom agenda command definitions
 (setq org-agenda-custom-commands
       (quote (("N" "Notes" tags "NOTE"
@@ -307,12 +326,17 @@
                 (tags "REFILE"
                       ((org-agenda-overriding-header "Tasks to Refile")
                        (org-tags-match-list-sublevels nil)))
-		(tags-todo "*/!NEXT"
+		(tags-todo "-HABIT/!NEXT"
                       ((org-agenda-overriding-header "Next Tasks")))
 		(tags-todo "*/WAITING"
 			   ((org-agenda-overriding-header "Waiting Tasks")))
-		(tags-todo "-REFILE/TODO"
-                      ((org-agenda-overriding-header "Backlog"))))
+		(tags-todo "-REFILE-HABIT/TODO"
+			   ((org-agenda-overriding-header "Backlog")
+			    (org-agenda-sorting-strategy '(priority-down)))
+			   )
+		(tags-todo "+HABIT"
+			   ((org-agenda-overriding-header "Habits"))
+			   ))
                nil))))
   ;; Compact the block agenda view
   (setq org-agenda-compact-blocks t)
@@ -367,13 +391,13 @@
 	 ("C-c /" . comment-line)
 	 ("C-j" . python-eval-print-last-sexp))
   :init
-  (setq python-indent-guess-indent-offset t)  
-  (setq python-indent-guess-indent-offset-verbose nil)
-  (setq python-shell-interpreter "Projects/Programming/Python/miniconda3/envs/main/bin/ipython"
-	python-shell-interpreter-args "-i --simple-prompt --InteractiveShell.display_page=True")
-  (load "~/.emacs.d/packages/pydocs.el") ;; Custom yasnippet documentation
-  (load "~/.emacs.d/packages/pyfun.el") ;; Runs python code like interactive elisp
-  (setq python-python-command "/Users/zach/Projects/Programming/Python/miniconda3/bin/python"))
+  (setq python-indent-guess-indent-offset t  
+	python-indent-guess-indent-offset-verbose nil
+	python-shell-interpreter "Projects/Programming/Python/miniconda3/envs/main/bin/ipython"
+	python-shell-interpreter-args "-i --simple-prompt --InteractiveShell.display_page=True"
+	python-python-command "/Users/zach/Projects/Programming/Python/miniconda3/bin/python")
+  (load "~/.emacs.d/packages/pydocs.el")
+  (load "~/.emacs.d/packages/pyfun.el"))
 
 ;; Notes 
 (use-package remember
@@ -403,11 +427,21 @@
 ;; Good terminal
 (use-package vterm  :ensure t)
 
+;; Visual Undo Tree
+(use-package vundo
+  :config
+  (setq vundo-glyph-alist vundo-unicode-symbols))
+
 ;; Snippet library
 (use-package yasnippet
   :ensure t
   :config
   (yas-global-mode 1))
+
+;; ---------------------------------- ELISP ------------------------------------
+(use-package dash)
+
+(use-package s)
 
 ;; --------------------------------- Themes ------------------------------------
 ;; Terminal
@@ -448,19 +482,4 @@
 
 ")
 ;; --------------------------------- Misc --------------------------------------
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(epg-gpg-program "/usr/local/bin/gpg")
- '(package-selected-packages
-   '(htmlize plantuml-mode vterm use-package slime request projectile paredit multiple-cursors magit iedit geiser exec-path-from-shell doom-modeline dante crux clues-theme auto-yasnippet ace-window))
- '(safe-local-variable-values '((org-confirm-babel-evaluate)))
- '(warning-suppress-types '((comp))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+
