@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: lat
+# key: lat
+# --
+\begin{equation}
+$0
+\end{equation}

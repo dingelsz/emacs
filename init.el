@@ -11,6 +11,7 @@
 
 (add-to-list 'exec-path "/usr/local/bin/")
 (global-set-key (kbd "C-x C-x") 'execute-extended-command)
+(global-set-key (kbd "M-g") 'goto-line)
 
 ;; Smooth scrolling & Turn off text resizing via scroll
 ;; (pixel-scroll-precision-mode)
@@ -38,6 +39,7 @@
 				(interactive)
 				(popup-menu 'yank-menu)))
 
+(global-visual-line-mode 1)
 ;; Backup and AutoSave. Note, backup saves old versions of files when we
 ;; overwrite them. Autosave makes saves after we make changes but before
 ;; we save.
@@ -75,6 +77,8 @@
 
 ;; A quick terminal
 (global-set-key (kbd "C-x t") #'terminal)
+;; Same for python
+(global-set-key (kbd "C-c p") #'python-terminal)
 
 (add-hook 'emacs-lisp-mode-hook #'my-extend-return)
 (add-hook 'lisp-mode-hook #'my-extend-return)
@@ -84,10 +88,47 @@
   (c-set-offset 'substatement-open 0))
 (add-hook 'c++-mode-hook 'my-c++-mode-hook)
 
-(add-to-list 'safe-local-variable-values
-	     '(org-babel-python-command . "/Users/zach/projects/miniconda3/envs/main/bin/ipython"))
-(add-to-list 'safe-local-variable-values
-	     '(org-confirm-babel-evaluate . nil))
+;; --------------------------------- Themes ------------------------------------
+;; Terminal
+(unless (window-system)
+    (progn
+      (load-theme 'wombat t)
+      (menu-bar-mode -1)))
+ (when (window-system)
+   (progn
+    (add-to-list 'load-path "/Users/zach/projects/repos/nano-emacs")
+     (require 'nano-theme)
+     (require 'nano-layout)
+     (setq nano-fonts-use t)
+     (require 'nano-theme-light)
+
+(require 'nano-faces)
+(nano-faces)
+
+(require 'nano-theme)
+(nano-theme)
+
+;; Nano default settings (optional)
+(require 'nano-defaults)
+
+;; Undo nano emacs settings Mac specific
+(when (eq system-type 'darwin)
+  (setq ns-use-native-fullscreen t
+        mac-option-key-is-meta t
+        mac-command-key-is-meta nil
+        mac-command-modifier 'control
+        mac-option-modifier 'meta
+        mac-use-title-bar nil))
+
+;; Nano session saving (optional)
+(require 'nano-session)
+
+;; Nano header & mode lines (optional)
+(require 'nano-modeline)
+
+     (pixel-scroll-precision-mode t)
+     ))
+
 ;; ------------------------------ Packages -------------------------------------
 ;; Store packages in a specific folder for version control
 (unless (file-directory-p "~/.emacs.d/packages")
@@ -100,6 +141,7 @@
 
 (require 'package)
 (package-initialize)
+
 
 ;; Add repos
 (add-to-list 'package-archives '("gnu"   . "https://elpa.gnu.org/packages/"))
@@ -168,6 +210,12 @@
   (setq doom-modeline-buffer-encoding nil))
 
 
+(use-package electric
+  :hook
+  (java-mode . electric-pair-mode)
+  (c-mode . electric-pair-mode)
+  (c++-mode . electric-pair-mode))
+
 ;; IRC Client
 (use-package erc
   :config
@@ -204,6 +252,9 @@
   :init (add-hook 'scheme-mode-hook 'geiser-mode)
   :commands geiser-mode)
 
+(use-package geiser-guile
+  :defer t)
+
 (defun ido-my-keys ()
   "Keybindings for navigating ido results ."
   (define-key ido-common-completion-map (kbd "C-n") 'ido-next-match)
@@ -223,7 +274,7 @@
   (ido-mode 1)
   (add-hook 'ido-setup-hook 'ido-my-keys)
   :bind ("C-<tab>" . ido-hippie-expand)
-)
+  )
 
 ;; Edit multiple occurences of a word
 (use-package iedit
@@ -245,112 +296,106 @@
 
 ;; Organization mode
 (use-package org
-  :bind ("C-c a" . org-agenda)
+  :bind
+  ("C-c a" . org-agenda)
+  ("C-c c" . org-capture)
+  :hook
+  (org-mode-hook . visual-line-mode)
+  (org-agenda-finalize-hook hl-line-mode)
   :config
-  (setq org-directory "~/org")
-  (setq org-startup-folded t)
+  ;; General
+  (setq org-directory "~/org"
+	org-startup-folded t
+	org-hide-emphasis-markers t
+	org-agenda-window-setup 'other-window
+	org-tags-column 1
+    org-html-htmlize-output-type 'css)
   ;; Agenda
-  (setq org-agenda-files '("~/org"))
-  (setq org-agenda-span 'day)
-  ;; Speed Commands
-  (setq org-use-speed-commands t)
-  (setq org-speed-commands-user (quote (("s" . org-save-all-org-buffers)
-					("w" . org-refile)
-					("z" . org-add-note))))
+  (setq org-agenda-files '("~/org")
+	org-agenda-span 'day
+	org-agenda-window-setup 'current-window 
+	org-use-speed-commands t
+	org-speed-commands-user '(("d" . org-decrypt-entry)
+				  ("e" . org-encrypt-entry)
+				  ("s" . org-save-all-org-buffers)
+				  ("w" . org-refile)
+				  ("z" . org-add-note)))
   ;; TODO list
-  (setq org-log-done 'time) ;; Adds a timestamp when an org todo item is done
-  (setq org-use-fast-todo-selection t)
+  (setq org-log-done 'time
+	org-reverse-note-order t
+	org-use-fast-todo-selection t
+	org-highest-priority 1
+	org-lowest-priority 3
+	org-default-priority 4
+	org-clock-in-switch-to-state "ACTIVE"
+	org-clock-out-when-done t
+	org-clock-persists-query-resume nil
+	org-todo-keywords '((sequence "TODO(t!)" "ACTIVE(a!)" "|" "DONE(d!)")
+			    (sequence "BLOCKED(b@/!)" "|" "CANCELLED(c@/!)"))
+	org-todo-keyword-faces '(("TODO" :foreground "orange" :weight bold)
+				 ("ACTIVE" :foreground "light blue" :weight bold)
+				 ("BLOCKED" :foreground "red" :weight bold)
+				 ("DONE" :foreground "forest green" :weight bold)
+				 ("CANCELLED" :foreground "forest green" :weight bold)))
 
-  (setq org-todo-keywords '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
-			    (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)" "PHONE" "MEETING")))
-  (setq org-todo-keyword-faces
-      (quote (("TODO" :foreground "red" :weight bold)
-              ("NEXT" :foreground "blue" :weight bold)
-              ("DONE" :foreground "forest green" :weight bold)
-              ("WAITING" :foreground "orange" :weight bold)
-              ("HOLD" :foreground "magenta" :weight bold)
-              ("CANCELLED" :foreground "forest green" :weight bold)
-              ("MEETING" :foreground "forest green" :weight bold))))
-
-  (setq org-todo-state-tags-triggers
-      (quote (("CANCELLED" ("CANCELLED" . t))
-              ("WAITING" ("WAITING" . t))
-              ("HOLD" ("WAITING") ("HOLD" . t))
-              (done ("WAITING") ("HOLD"))
-              ("TODO" ("WAITING") ("CANCELLED") ("HOLD"))
-              ("NEXT" ("WAITING") ("CANCELLED") ("HOLD"))
-              ("DONE" ("WAITING") ("CANCELLED") ("HOLD")))))
-  
   ;; Org Capture
-  (global-set-key (kbd "C-c c") 'org-capture)
-  (setq org-capture-templates
-      (quote (("t" "Task" entry (file "~/org/refile.org")
-               "* TODO %?\n%U\n%a\n" :clock-in t :clock-resume t)
-	      ("a" "Appointment" entry (file "~/org/refile.org")
-               "* TODO %?: :APPOINTMENT:\n%U\n%a\n" :clock-in t :clock-resume t)
-              ("n" "Note" entry (file "~/org/refile.org")
-               "* %? :NOTE:\n%U\n%a\n" :clock-in t :clock-resume t)
-              ("h" "Habit" entry (file "~/org/refile.org")
-               "* NEXT %? :HABIT:\n%U\n%a\nSCHEDULED: %(format-time-string \"%<<%Y-%m-%d %a .+1d/3d>>\")\n:PROPERTIES:\n:STYLE: habit\n:REPEAT_TO_STATE: NEXT\n:END:\n"))))
-  (setq org-refile-targets (quote ((nil :maxlevel . 3)
-                                   (org-agenda-files :maxlevel . 3))))
-  (setq org-refile-use-outline-path 'file)
-  (setq org-outline-path-complete-in-steps nil)
-;; Use cache and invalidate every 5 minutes
-;; (setq org-refile-use-cache t)
-;; (run-with-idle-timer 300 t (lambda ()
-;;                           (org-refile-cache-clear)
-;;                           (org-refile-get-targets)))
-  (defun +org-search ()
+  (setq org-capture-templates '(("m" "Meeting" entry (file "~/org/stagging.org")
+				 "* TODO %?\nCREATED: %U\nSCHEDULED: %U\n- Questions\n- Notes\n- Action Items\n")
+				("t" "Task" entry (file "~/org/stagging.org")
+				 "* TODO %?\n"))
+	org-refile-targets  '((nil :maxlevel . 1) (org-agenda-files :maxlevel . 3))
+	org-refile-use-outline-path 'file
+	org-outline-path-complete-in-steps nil)
+
+  (defun org-search ()
     (interactive)
     (org-refile '(4)))
-  (setq completion-styles '(substring partial-completion)) ;; Fuzzy seach
-  (setq org-completion-use-ido t)
+  (setq completion-styles '(substring partial-completion)
+	org-completion-use-ido t)
 
   ;; Agenda
   ;; Do not dim blocked tasks
-  (setq org-agenda-dim-blocked-tasks nil)
-  ;; Highlight the row the cursor is on
-  (add-hook 'org-agenda-finalize-hook #'hl-line-mode)
-  ;; Custom agenda command definitions
-(setq org-agenda-custom-commands
-      (quote (("N" "Notes" tags "NOTE"
-               ((org-agenda-overriding-header "Notes")
-                (org-tags-match-list-sublevels t)))
-              ("h" "Habits" tags-todo "STYLE=\"habit\""
-               ((org-agenda-overriding-header "Habits")
-                (org-agenda-sorting-strategy
-                 '(todo-state-down effort-up category-keep))))
-              (" " "Personal Agenda"
-               ((agenda "" ((org-agenda-span 1)))
-                (tags "REFILE"
-                      ((org-agenda-overriding-header "Tasks to Refile")
-                       (org-tags-match-list-sublevels nil)))
-		(tags-todo "-HABIT/!NEXT"
-                      ((org-agenda-overriding-header "Next Tasks")))
-		(tags-todo "*/WAITING"
-			   ((org-agenda-overriding-header "Waiting Tasks")))
-		(tags-todo "-REFILE-HABIT/TODO"
-			   ((org-agenda-overriding-header "Backlog")
-			    (org-agenda-sorting-strategy '(priority-down)))
-			   )
-		(tags-todo "+HABIT"
-			   ((org-agenda-overriding-header "Habits"))
-			   ))
-               nil))))
-  ;; Compact the block agenda view
-  (setq org-agenda-compact-blocks t)
-
+  (setq org-agenda-dim-blocked-tasks nil
+	org-agenda-compact-blocks t
+	org-agenda-restore-window-after-quite t)
+  (setq org-agenda-custom-commands
+	'(("o" "Organizer" 
+	   ((tags "REFILE"
+		   ((org-agenda-overriding-header "Tasks to Refile")
+		    (org-tags-match-list-sublevels nil)))
+	    (tags-todo "*/ACTIVE"
+		       ((org-agenda-override-header "Current")))
+	    (tags-todo "*/BLOCKED"
+		       ((org-agenda-override-header "Blocked")))
+	    (tags-todo "*/TODO"
+		       ((org-agenda-override-header "Backlog")))))))
   
   ;; Inline images
-  (setq org-startup-with-inline-images t)
-  (setq org-image-actual-width nil)
+  (setq org-startup-with-inline-images t
+	org-image-actual-width nil)
 
   ;; Babel - Literate programming
   (org-babel-do-load-languages
    'org-babel-load-languages
-   '((python . t) (C . t) (sqlite . t) (shell . t) (lisp . t)))
-  (setq org-src-tab-acts-natively t) ;; Fixes weird SQLite indent issue in babel
+   '((python . t) (C . t) (sqlite . t) (shell . t) (lisp . t) (java . t)))
+  (setq org-src-fontify-natively t
+        org-src-tab-acts-natively t
+        org-src-window-setup 'current-window) ;; Fixes weird SQLite indent issue in babel
+  ;; Cosmetics
+  (set-face-attribute 'org-block-begin-line nil
+                      :overline "#AAAAAA" :underline "#AAAAAA"
+                      :foreground "#5AABD1" :background "#F9F9F9" :extend t)  
+  (set-face-attribute 'org-block nil
+                      :background "#F9F9F9")
+  (set-face-attribute 'org-block-end-line nil
+                      :overline "#AAAAAA" :underline "#AAAAAA"
+                      :foreground "#5AABD1" :background "#F9F9F9" :extend t)
+  (set-face-attribute 'org-block-end-line nil
+                      :overline "#AAAAAA" :underline "#AAAAAA"
+                      :foreground "#5AABD1" :background "#F9F9F9" :extend t)
+  (set-face-attribute 'org-code nil
+                      :background "#FFFFFF" :extend t
+                      :underline "#AAAAAA")
 
   ;; EPA - Used for encryption
   (require 'epa-file)
@@ -358,9 +403,17 @@
   ;; Org-crypt for encryption
   (require 'org-crypt)
   (org-crypt-use-before-save-magic)
-  (setq org-crypt-key "7BA31E7A1DE0A2C4")
-  (setq org-tags-exclude-from-inheritance (quote ("crypt")))
-  (add-hook 'org-mode-hook #'visual-line-mode))
+  (setq org-crypt-key nil
+	    org-tags-exclude-from-inheritance (quote ("crypt")))
+  :custom-face
+
+  (org-block ((t (:background "#F9F9F9" :extend t))) )
+)
+
+(use-package org-modern
+  :config
+  (setq org-modern-star '("#" "##" "###" "####" "#####"))
+  (setq org-ellipsis " ⇒ "))
 
 (use-package plantuml-mode
   :config
@@ -370,13 +423,26 @@
 
 (use-package htmlize)
 
+(use-package gnus
+  :config
+  (setq user-full-name "Zachary Dingels"
+	user-mail-address "zacharydingels@gmail.com"
+	gnus-select-method '(nnimap "imap.gmail.com")
+	smtpmail-default-smtp-server "smtp.gmail.com"
+	message-directory "~/.emacs.d/mail"
+	nnml-directory "~/.emacs.d/mail"))
+
 (use-package paredit
   :config
   (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
   (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
+  (add-hook 'fundamental-mode-hook       #'enable-paredit-mode)
+  (add-hook 'emacs-lisp-mode            #'enable-paredit-mode)  
+  (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
+  (add-hook 'ielm-mode-hook             #'enable-paredit-mode)
+  (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
   (add-hook 'lisp-mode-hook             #'enable-paredit-mode)
-  (add-hook 'scheme-mode-hook           #'enable-paredit-mode)
-  (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode))
+  (add-hook 'scheme-mode-hook           #'enable-paredit-mode))
 
 ;; Project management
 (use-package projectile
@@ -392,10 +458,7 @@
 	 ("C-j" . python-eval-print-last-sexp))
   :init
   (setq python-indent-guess-indent-offset t  
-	python-indent-guess-indent-offset-verbose nil
-	python-shell-interpreter "Projects/Programming/Python/miniconda3/envs/main/bin/ipython"
-	python-shell-interpreter-args "-i --simple-prompt --InteractiveShell.display_page=True"
-	python-python-command "/Users/zach/Projects/Programming/Python/miniconda3/bin/python")
+	python-indent-guess-indent-offset-verbose nil)
   (load "~/.emacs.d/packages/pydocs.el")
   (load "~/.emacs.d/packages/pyfun.el"))
 
@@ -443,21 +506,6 @@
 
 (use-package s)
 
-;; --------------------------------- Themes ------------------------------------
-;; Terminal
-(unless (window-system)
-    (progn
-      (load-theme 'wombat t)
-      (menu-bar-mode -1)))
-;; GUI
-(when (window-system)
-  (progn
-    (load-theme 'clues t) 
-    (tool-bar-mode -1)
-    (scroll-bar-mode -1)
-    (pixel-scroll-precision-mode t)
-    (set-frame-font "Roboto Mono Light 14")))
-
 ;; -------------------------------- Random -------------------------------------
 ;; Don't show the splash screen - go straight to scratch
 (setq inhibit-splash-screen t)
@@ -482,4 +530,25 @@
 
 ")
 ;; --------------------------------- Misc --------------------------------------
+(add-hook 'org-agenda-mode-hook
+	  (lambda ()
+	    (org-defkey org-agenda-mode-map [(tab)] (lambda ()
+						      (interactive)
+						      (org-agenda-goto)
+						      (org-narrow-to-subtree)))))
 
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(epg-gpg-program "/usr/local/bin/gpg")
+ '(package-selected-packages
+   '(org-modern pdf-tools geiser-guile lsp-java vundo vterm use-package slime request projectile plantuml-mode paredit multiple-cursors magit iedit htmlize geiser exec-path-from-shell doom-modeline dante crux clues-theme auto-yasnippet ace-window)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+)
+(put 'narrow-to-page 'disabled nil)
